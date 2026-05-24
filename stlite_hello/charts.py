@@ -1,6 +1,8 @@
 import altair as alt
 import numpy as np
 import pandas as pd
+import pandera.pandas as pa
+from pandera.typing import DataFrame
 from pydantic import BaseModel, ConfigDict, Field
 
 
@@ -12,14 +14,19 @@ class WaveChartParams(BaseModel):
     points: int = Field(default=120)
 
 
-def wave_dataframe(params: WaveChartParams) -> pd.DataFrame:
+class WaveData(pa.DataFrameModel):
+    x: float
+    y: float
+
+
+def wave_dataframe(params: WaveChartParams) -> DataFrame[WaveData]:
     x = np.linspace(0, 2 * np.pi, params.points)
     y = params.amplitude * np.sin(params.waves * x)
-    return pd.DataFrame({"x": x, "y": y})
+    return pd.DataFrame({"x": x, "y": y}).pipe(DataFrame[WaveData])
 
 
 def build_sine_wave_chart(
-    data: pd.DataFrame,
+    data: DataFrame[WaveData],
     *,
     params: WaveChartParams,
 ) -> alt.Chart:

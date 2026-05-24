@@ -194,6 +194,7 @@ def test_browser_requirements_loads_project_dependencies(
         "pydantic-extra-types",
         "semver",
         "pydantic-settings",
+        "pandera",
     ]
 
 

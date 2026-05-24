@@ -23,6 +23,7 @@ dependencies = [
     "semver==3.0.4",
     "pydantic-settings==2.14.1",
     "streamlit==1.57.0",
+    "pandera==0.31.1",
 ]
 
 [dependency-groups]
@@ -30,7 +31,6 @@ dev = [
     "jinja2==3.1.6",
     "mypy==2.1.0",
     "pandas-stubs==2.3.0.250703",
-    "pandera==0.31.1",
     "poethepoet==0.46.0",
     "prek==0.4.0",
     "pytest==9.0.3",
