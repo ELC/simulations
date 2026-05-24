@@ -39,10 +39,9 @@ def test_main_aligns_browser_requirements_to_pyodide_bundle(
     try:
         os.chdir(tmp_path)
         destination = main()
+        index_html = (destination.resolve() / "index.html").read_text(encoding="utf-8")
     finally:
         os.chdir(original_cwd)
-
-    index_html = (destination.resolve() / "index.html").read_text(encoding="utf-8")
 
     bundle_versions = SITE_SETTINGS.pyodide_bundle_versions
 

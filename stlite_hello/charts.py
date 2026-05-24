@@ -41,7 +41,6 @@ def build_sine_wave_chart(
         )
         .properties(
             title=f"Sine wave ({params.waves} cycles, amplitude {params.amplitude})",
-            width="container",
             height=320,
         )
         .interactive()
