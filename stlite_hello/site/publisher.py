@@ -29,10 +29,12 @@ class SiteFilePublisher(FrozenSiteModel):
     def nojekyll_path(self) -> Path:
         return self.destination / ".nojekyll"
 
+    def clean(self) -> None:
+        if self.destination.exists():
+            shutil.rmtree(self.destination)
+
     def copy_package(self, source: Path, package_name: str) -> Sequence[str]:
         destination = self.package_path(package_name)
-        if destination.exists():
-            shutil.rmtree(destination)
         shutil.copytree(
             source,
             destination,
@@ -50,6 +52,7 @@ class SiteFilePublisher(FrozenSiteModel):
 
     def publish_site(self, ready: "SiteBuilderReady") -> Path:
         publisher = self.model_copy(update={"destination": ready.destination})
+        publisher.clean()
         ready.destination.mkdir(parents=True, exist_ok=True)
 
         package_files = publisher.copy_package(ready.package_dir, ready.package_name)

@@ -11,7 +11,7 @@ from stlite_hello.site import (
     RequirementsAdapter,
     SiteFilePublisher,
     SiteTemplateRenderer,
-    main,
+    prepare_site,
 )
 
 
@@ -80,8 +80,10 @@ def site_dir(
     file_publisher: SiteFilePublisher,
     browser_requirements: Requirements,
 ) -> Path:
-    return main(
-        output_dir,
-        publisher=file_publisher,
-        browser_requirements=browser_requirements,
+    return file_publisher.publish_site(
+        prepare_site(
+            output_dir=output_dir,
+            stlite_browser_version=SITE_SETTINGS.stlite_browser_version,
+            browser_requirements=browser_requirements,
+        ),
     )

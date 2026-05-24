@@ -14,8 +14,9 @@ from stlite_hello.site import (
     SiteBuilder,
     SiteFilePublisher,
     SiteTemplateRenderer,
-    build_default_site,
+    load_browser_requirements,
     main,
+    prepare_site,
 )
 
 PRESENTATION_ENTRYPOINT = "stlite_hello/presentation/app.py"
@@ -33,6 +34,43 @@ def test_site_builder_prepare_rejects_existing_file(tmp_path: Path) -> None:
 
     with pytest.raises(OutputNotDirectoryError, match="Output path must be a directory"):
         SiteBuilder.prepare(file_path)
+
+
+def test_clean_removes_existing_output_dir(
+    output_dir: Path,
+    file_publisher: SiteFilePublisher,
+) -> None:
+    marker = output_dir / "stale.txt"
+    marker.write_text("stale", encoding="utf-8")
+
+    file_publisher.clean()
+
+    assert not output_dir.exists()
+
+
+def test_clean_is_noop_when_output_dir_missing(
+    tmp_path: Path,
+    template_renderer: SiteTemplateRenderer,
+) -> None:
+    missing = tmp_path / "missing"
+    publisher = SiteFilePublisher(
+        templates=template_renderer,
+        destination=missing,
+    )
+
+    publisher.clean()
+
+    assert not missing.exists()
+
+
+def test_load_browser_requirements_aligns_to_pyodide_bundle() -> None:
+    requirements = load_browser_requirements(
+        project_dependency_specifications=SITE_SETTINGS.project_dependency_specifications,
+        pyodide_bundle_versions=SITE_SETTINGS.pyodide_bundle_versions,
+    )
+
+    for name, version in SITE_SETTINGS.pyodide_bundle_versions.items():
+        assert f"{name}=={version}" in requirements.specs
 
 
 def test_build_site_writes_static_assets(site_dir: Path) -> None:
@@ -218,13 +256,13 @@ def test_pyodide_bundle_versions_pins_binary_packages() -> None:
     assert bundle["pandas"] == SemanticVersion.parse("2.3.3")
 
 
-def test_build_default_site_aligns_browser_requirements_to_pyodide_bundle(
+def test_main_aligns_browser_requirements_to_pyodide_bundle(
     tmp_path: Path,
 ) -> None:
     original_cwd = Path.cwd()
     try:
         os.chdir(tmp_path)
-        destination = build_default_site()
+        destination = main()
     finally:
         os.chdir(original_cwd)
 
@@ -284,27 +322,29 @@ def test_build_site_replaces_existing_package_copy(
     stale_marker = stale_package / "stale.py"
     stale_marker.write_text("# stale\n", encoding="utf-8")
 
-    main(
-        output_dir,
-        publisher=file_publisher,
-        browser_requirements=browser_requirements,
+    file_publisher.publish_site(
+        prepare_site(
+            output_dir=output_dir,
+            stlite_browser_version=SITE_SETTINGS.stlite_browser_version,
+            browser_requirements=browser_requirements,
+        ),
     )
 
     assert not stale_marker.exists()
     assert (output_dir / PRESENTATION_ENTRYPOINT).is_file()
 
 
-def test_build_site_main_prints_destination(
-    output_dir: Path,
-    file_publisher: SiteFilePublisher,
-    browser_requirements: Requirements,
+def test_main_prints_destination(
+    tmp_path: Path,
     capsys: pytest.CaptureFixture[str],
 ) -> None:
-    destination = main(
-        output_dir,
-        publisher=file_publisher,
-        browser_requirements=browser_requirements,
-    )
+    original_cwd = Path.cwd()
+    try:
+        os.chdir(tmp_path)
+        destination = main()
+        expected_destination = str(destination.resolve())
+    finally:
+        os.chdir(original_cwd)
 
     captured = capsys.readouterr().out
-    assert str(destination.resolve()) in captured
+    assert expected_destination in captured
