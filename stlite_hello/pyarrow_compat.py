@@ -22,14 +22,14 @@ imports against the real pyarrow normally.
 """
 
 import sys
-from collections.abc import Callable, MutableMapping
+from collections.abc import MutableMapping
+from importlib import import_module
 from typing import Any
 
 
 def block_pyarrow_and_import(
     platform: str,
     modules: MutableMapping[str, Any],
-    importer: Callable[[], None],
 ) -> bool:
     if platform != "emscripten":
         return False
@@ -38,7 +38,8 @@ def block_pyarrow_and_import(
     saved = modules.get("pyarrow", sentinel)
     modules["pyarrow"] = None
     try:
-        importer()
+        import_module("pandera")
+        import_module("pandera.pandas")
     finally:
         if saved is sentinel:
             modules.pop("pyarrow", None)
@@ -47,9 +48,4 @@ def block_pyarrow_and_import(
     return True
 
 
-def import_pandera_module() -> None:
-    import pandera  # noqa: F401, PLC0415
-    import pandera.pandas  # noqa: F401, PLC0415
-
-
-block_pyarrow_and_import(sys.platform, sys.modules, import_pandera_module)
+block_pyarrow_and_import(sys.platform, sys.modules)

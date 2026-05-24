@@ -1,5 +1,7 @@
 import os
 import runpy
+import sys
+import types
 from pathlib import Path
 
 import pytest
@@ -36,6 +38,22 @@ def test_site_builder_prepare_rejects_existing_file(tmp_path: Path) -> None:
         SiteBuilder.prepare(file_path)
 
 
+def test_with_browser_app_rejects_package_without_file(tmp_path: Path) -> None:
+    package_name = "coverage_fake_pkg"
+    fake_package = types.ModuleType(package_name)
+    fake_package.__file__ = None
+    sys.modules[package_name] = fake_package
+    app_module = types.ModuleType(f"{package_name}.app")
+    app_module.__name__ = f"{package_name}.app"
+    builder = SiteBuilder.prepare(tmp_path)
+
+    try:
+        with pytest.raises(TypeError, match="has no __file__"):
+            builder.with_browser_app(app_module)
+    finally:
+        sys.modules.pop(package_name, None)
+
+
 def test_clean_removes_existing_output_dir(
     output_dir: Path,
     file_publisher: SiteFilePublisher,
@@ -69,7 +87,9 @@ def test_load_browser_requirements_aligns_to_pyodide_bundle() -> None:
         pyodide_bundle_versions=SITE_SETTINGS.pyodide_bundle_versions,
     )
 
-    for name, version in SITE_SETTINGS.pyodide_bundle_versions.items():
+    bundle_versions: dict[str, SemanticVersion] = SITE_SETTINGS.pyodide_bundle_versions
+
+    for name, version in bundle_versions.items():  # pylint: disable=no-member
         assert f"{name}=={version}" in requirements.specs
 
 
@@ -266,9 +286,11 @@ def test_main_aligns_browser_requirements_to_pyodide_bundle(
     finally:
         os.chdir(original_cwd)
 
-    index_html = (destination / "index.html").read_text(encoding="utf-8")
+    index_html = (destination.resolve() / "index.html").read_text(encoding="utf-8")
 
-    for name, version in SITE_SETTINGS.pyodide_bundle_versions.items():
+    bundle_versions: dict[str, SemanticVersion] = SITE_SETTINGS.pyodide_bundle_versions
+
+    for name, version in bundle_versions.items():  # pylint: disable=no-member
         assert f"{name}=={version}" in index_html
 
 
@@ -276,7 +298,7 @@ def test_template_renderer_substitutes_version_and_requirements(
     template_renderer: SiteTemplateRenderer,
 ) -> None:
     rendered = template_renderer.render_index_html(
-        version="9.9.9",
+        version=SemanticVersion.parse("9.9.9"),
         requirements=("altair",),
         package_files=("stlite_hello/__init__.py",),
         entrypoint=PRESENTATION_ENTRYPOINT,
@@ -301,7 +323,7 @@ def test_jinja_environment_does_not_autoescape_python_templates(
     template_renderer: SiteTemplateRenderer,
 ) -> None:
     rendered = template_renderer.render_index_html(
-        version="1.0.0",
+        version=SemanticVersion.parse("1.0.0"),
         requirements=(),
         package_files=("stlite_hello/presentation/app.py",),
         entrypoint=PRESENTATION_ENTRYPOINT,

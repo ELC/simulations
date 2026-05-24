@@ -25,7 +25,11 @@ class SiteBuilderDestination(FrozenSiteModel):
     def with_browser_app(self, app_module: ModuleType) -> SiteBuilderBrowser:
         package_name = app_module.__name__.split(".", maxsplit=1)[0]
         package_root = import_module(package_name)
-        package_dir = Path(package_root.__file__).resolve().parent
+        module_file = package_root.__file__
+        if module_file is None:
+            msg = f"Package {package_name!r} has no __file__"
+            raise TypeError(msg)
+        package_dir = Path(module_file).resolve().parent
         return SiteBuilderBrowser(
             destination=self.destination,
             package_name=package_name,

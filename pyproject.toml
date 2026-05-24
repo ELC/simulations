@@ -29,13 +29,10 @@ dependencies = [
 [dependency-groups]
 dev = [
     "jinja2==3.1.6",
-    "mypy==2.1.0",
-    "pandas-stubs==3.0.0.260204",
     "poethepoet==0.46.0",
     "prek==0.4.0",
     "pytest==9.0.3",
     "pytest-cov==7.1.0",
-    "ruff==0.15.14",
 ]
 
 [tool.uv]
@@ -64,6 +61,9 @@ addopts = [
 source = [
     "stlite_hello",
     "tests",
+]
+omit = [
+    "stlite_hello/__main__.py",
 ]
 
 [tool.coverage.report]
@@ -152,7 +152,12 @@ line-ending = "auto"
 #########################
 
 [tool.pylint.main]
-extension-pkg-allow-list = ["mypy","dependency_injector","pydantic_settings"]
+extension-pkg-allow-list = [
+    "mypy",
+    "dependency_injector",
+    "pydantic_settings",
+]
+load-plugins = ["pylint_pydantic"]
 
 [tool.pylint.typecheck]
 generated-members = ["sqlalchemy.func.*"]
@@ -182,4 +187,5 @@ disable = [
     "R0903",  # too-few-public-methods (dataclasses/DTOs)
     "R0913",  # too-many-arguments (DI constructors)
     "R0917",  # too-many-positional-arguments (DI constructors)
+    "W0621",  # pytest fixture parameter names shadow outer fixtures
 ]

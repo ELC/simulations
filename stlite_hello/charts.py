@@ -30,7 +30,7 @@ def build_sine_wave_chart(
     *,
     params: WaveChartParams,
 ) -> alt.Chart:
-    return (
+    return (  # type: ignore[no-any-return]
         alt
         .Chart(data)
         .mark_line(point=True)

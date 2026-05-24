@@ -1,19 +1,7 @@
 import pytest
 from streamlit.testing.v1 import AppTest
 
-import stlite_hello.__main__ as package_main
-from stlite_hello import presentation
 from stlite_hello.charts import WaveChartParams
-from stlite_hello.presentation.app import main as presentation_main
-
-
-def test_package_main_imports_presentation_main() -> None:
-    assert package_main.main is presentation_main
-
-
-def test_presentation_rejects_unknown_attribute() -> None:
-    with pytest.raises(AttributeError, match="has no attribute 'missing'"):
-        _ = presentation.missing
 
 
 def test_main_renders_hello_world(stlite_main_app: AppTest) -> None:

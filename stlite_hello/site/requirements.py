@@ -70,4 +70,4 @@ class Requirements(BaseModel):
         return Requirements(requirements=aligned_requirements)
 
 
-RequirementsAdapter = TypeAdapter(Requirements)
+RequirementsAdapter = TypeAdapter[Requirements](Requirements)  # pylint: disable=invalid-name
