@@ -1,0 +1,10 @@
+repos:
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.15.14
+    hooks:
+      - id: ruff-check
+        additional_dependencies:
+          - pandas-stubs==3.0.0.260204
+        exclude: ^_site/
+      - id: ruff-format
+        exclude: ^_site/

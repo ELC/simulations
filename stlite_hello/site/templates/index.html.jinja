@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, shrink-to-fit=no"
+    />
+    <title>Stlite Hello World</title>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/@stlite/browser@{{ version }}/build/stlite.css"
+    />
+    <script
+      type="module"
+      src="https://cdn.jsdelivr.net/npm/@stlite/browser@{{ version }}/build/stlite.js"
+    ></script>
+    <style>
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        height: 100%;
+      }
+      streamlit-app {
+        display: block;
+        min-height: 100vh;
+      }
+    </style>
+  </head>
+  <body>
+    <streamlit-app src="./app.py">
+{% for path in package_files %}
+      <app-file name="{{ path }}" url="./{{ path }}"></app-file>
+{% endfor %}
+      <app-requirements>
+{% for package in requirements %}
+        {{ package }}
+{% endfor %}
+      </app-requirements>
+    </streamlit-app>
+  </body>
+</html>
