@@ -49,7 +49,7 @@ serve-site = { sequence = [
     "build-site",
     { shell = "python -m http.server 8000 --directory _site" },
 ] }
-dev = "streamlit run stlite_hello/__main__.py"
+dev = "streamlit run stlite_hello/presentation/app.py"
 ci = { sequence = ["check", "test", "build-site"] }
 
 [tool.pytest.ini_options]

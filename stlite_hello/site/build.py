@@ -1,6 +1,6 @@
 from pathlib import Path
 
-import stlite_hello.app as app_module
+from stlite_hello.presentation import app as app_module
 
 from .builder import SiteBuilder
 from .config import SITE_SETTINGS

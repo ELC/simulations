@@ -23,7 +23,7 @@ The static site loads `@stlite/browser` from jsDelivr and installs `pandas`, `nu
 
 | Path | Purpose |
 |------|---------|
-| `stlite_hello/charts.py` | Altair chart logic (pytest-covered) |
-| `stlite_hello/app.py` | Local Streamlit entrypoint |
+| `stlite_hello/charts.py` | Altair chart logic (presentation-agnostic, pytest-covered) |
+| `stlite_hello/presentation/` | Multipage Streamlit app (home + `pages/`) |
 | `stlite_hello/site/` | Builds `_site/` for GitHub Pages |
 | `_site/` | Generated static site (commit after `build-site` or let CI build it) |

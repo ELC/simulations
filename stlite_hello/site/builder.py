@@ -62,3 +62,7 @@ class SiteBuilderReady(FrozenSiteModel):
     app_module_name: str
     version: SemanticVersion
     browser_requirements: Requirements
+
+    @property
+    def entrypoint(self) -> str:
+        return f"{self.app_module_name.replace('.', '/')}.py"

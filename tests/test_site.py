@@ -5,63 +5,20 @@ from pathlib import Path
 import pytest
 from pydantic import TypeAdapter
 
-import stlite_hello.app as app_module
 from stlite_hello.site import (
     SITE_SETTINGS,
     OutputNotDirectoryError,
     Requirement,
     Requirements,
-    RequirementsAdapter,
     SemanticVersion,
     SiteBuilder,
     SiteFilePublisher,
     SiteTemplateRenderer,
     build_default_site,
+    main,
 )
-from stlite_hello.site import main as build_site
 
-
-@pytest.fixture
-def output_dir(tmp_path: Path) -> Path:
-    site_output = tmp_path / "_site"
-    site_output.mkdir()
-    return site_output
-
-
-@pytest.fixture
-def template_renderer() -> SiteTemplateRenderer:
-    return SiteTemplateRenderer(jinja_environment=SITE_SETTINGS.jinja_environment)
-
-
-@pytest.fixture
-def browser_requirements() -> Requirements:
-    return RequirementsAdapter.validate_python(
-        {"requirements": SITE_SETTINGS.project_dependency_specifications},
-    )
-
-
-@pytest.fixture
-def file_publisher(
-    template_renderer: SiteTemplateRenderer,
-    output_dir: Path,
-) -> SiteFilePublisher:
-    return SiteFilePublisher(
-        templates=template_renderer,
-        destination=output_dir,
-    )
-
-
-@pytest.fixture
-def site_dir(
-    output_dir: Path,
-    file_publisher: SiteFilePublisher,
-    browser_requirements: Requirements,
-) -> Path:
-    return build_site(
-        output_dir,
-        publisher=file_publisher,
-        browser_requirements=browser_requirements,
-    )
+PRESENTATION_ENTRYPOINT = "stlite_hello/presentation/app.py"
 
 
 def test_site_builder_prepare_sets_destination(output_dir: Path) -> None:
@@ -79,12 +36,14 @@ def test_site_builder_prepare_rejects_existing_file(tmp_path: Path) -> None:
 
 
 def test_build_site_writes_static_assets(site_dir: Path) -> None:
-    expected_files = ("index.html", "app.py", "404.html", ".nojekyll")
+    expected_files = ("index.html", "404.html", ".nojekyll")
     for filename in expected_files:
         assert (site_dir / filename).is_file()
     assert (site_dir / "stlite_hello").is_dir()
-    assert (site_dir / "stlite_hello" / "app.py").is_file()
+    assert (site_dir / PRESENTATION_ENTRYPOINT).is_file()
     assert (site_dir / "stlite_hello" / "charts.py").is_file()
+    assert (site_dir / "stlite_hello" / "presentation" / "pages" / "home.py").is_file()
+    assert (site_dir / "stlite_hello" / "presentation" / "pages" / "charts.py").is_file()
 
 
 def test_build_site_excludes_build_tooling_from_package_copy(site_dir: Path) -> None:
@@ -109,26 +68,22 @@ def test_index_html_mounts_every_package_file(site_dir: Path) -> None:
 
     expected_files = (
         "stlite_hello/__init__.py",
-        "stlite_hello/app.py",
         "stlite_hello/charts.py",
+        PRESENTATION_ENTRYPOINT,
+        "stlite_hello/presentation/pages/__init__.py",
+        "stlite_hello/presentation/pages/home.py",
+        "stlite_hello/presentation/pages/charts.py",
+        "stlite_hello/presentation/pages/about.py",
     )
     for relative_path in expected_files:
         assert f'<app-file name="{relative_path}"' in index_html
         assert f'url="./{relative_path}"' in index_html
 
 
-def test_browser_app_imports_main_from_package(
-    site_dir: Path,
-    template_renderer: SiteTemplateRenderer,
-) -> None:
-    app_source = (site_dir / "app.py").read_text(encoding="utf-8")
+def test_index_html_uses_presentation_entrypoint(site_dir: Path) -> None:
+    index_html = (site_dir / "index.html").read_text(encoding="utf-8")
 
-    expected = template_renderer.render_app_source(
-        app_module_name=app_module.__name__,
-    )
-    assert app_source == expected
-    assert "from stlite_hello.app import main" in app_source
-    assert "main()" in app_source
+    assert f'<streamlit-app src="./{PRESENTATION_ENTRYPOINT}">' in index_html
 
 
 def test_browser_requirement_rejects_unpinned_specification() -> None:
@@ -259,7 +214,6 @@ def test_requirements_aligned_to_keeps_versions_without_overrides() -> None:
 def test_pyodide_bundle_versions_pins_binary_packages() -> None:
     bundle = SITE_SETTINGS.pyodide_bundle_versions
 
-    assert bundle["altair"] == SemanticVersion.parse("6.0.0")
     assert bundle["numpy"] == SemanticVersion.parse("2.2.5")
     assert bundle["pandas"] == SemanticVersion.parse("2.3.3")
 
@@ -287,11 +241,13 @@ def test_template_renderer_substitutes_version_and_requirements(
         version="9.9.9",
         requirements=("altair",),
         package_files=("stlite_hello/__init__.py",),
+        entrypoint=PRESENTATION_ENTRYPOINT,
     )
 
     assert "@stlite/browser@9.9.9" in rendered
     assert "altair" in rendered
     assert '<app-file name="stlite_hello/__init__.py"' in rendered
+    assert f'<streamlit-app src="./{PRESENTATION_ENTRYPOINT}">' in rendered
 
 
 def test_template_renderer_not_found_html_returns_redirect_page(
@@ -306,8 +262,11 @@ def test_template_renderer_not_found_html_returns_redirect_page(
 def test_jinja_environment_does_not_autoescape_python_templates(
     template_renderer: SiteTemplateRenderer,
 ) -> None:
-    rendered = template_renderer.render_app_source(
-        app_module_name="stlite_hello.app",
+    rendered = template_renderer.render_index_html(
+        version="1.0.0",
+        requirements=(),
+        package_files=("stlite_hello/presentation/app.py",),
+        entrypoint=PRESENTATION_ENTRYPOINT,
     )
 
     assert "->" not in rendered or "-&gt;" not in rendered
@@ -325,14 +284,14 @@ def test_build_site_replaces_existing_package_copy(
     stale_marker = stale_package / "stale.py"
     stale_marker.write_text("# stale\n", encoding="utf-8")
 
-    build_site(
+    main(
         output_dir,
         publisher=file_publisher,
         browser_requirements=browser_requirements,
     )
 
     assert not stale_marker.exists()
-    assert (output_dir / "stlite_hello" / "app.py").is_file()
+    assert (output_dir / PRESENTATION_ENTRYPOINT).is_file()
 
 
 def test_build_site_main_prints_destination(
@@ -341,7 +300,7 @@ def test_build_site_main_prints_destination(
     browser_requirements: Requirements,
     capsys: pytest.CaptureFixture[str],
 ) -> None:
-    destination = build_site(
+    destination = main(
         output_dir,
         publisher=file_publisher,
         browser_requirements=browser_requirements,

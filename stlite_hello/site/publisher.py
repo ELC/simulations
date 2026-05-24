@@ -18,10 +18,6 @@ class SiteFilePublisher(FrozenSiteModel):
         return self.destination / package_name
 
     @property
-    def app_path(self) -> Path:
-        return self.destination / "app.py"
-
-    @property
     def index_path(self) -> Path:
         return self.destination / "index.html"
 
@@ -58,17 +54,14 @@ class SiteFilePublisher(FrozenSiteModel):
 
         package_files = publisher.copy_package(ready.package_dir, ready.package_name)
 
-        app_source = publisher.templates.render_app_source(
-            app_module_name=ready.app_module_name,
-        )
         index_html = publisher.templates.render_index_html(
             version=ready.version,
             requirements=ready.browser_requirements.specs,
             package_files=package_files,
+            entrypoint=ready.entrypoint,
         )
         not_found_html = publisher.templates.render_not_found_html()
 
-        publisher.app_path.write_text(app_source, encoding="utf-8")
         publisher.index_path.write_text(index_html, encoding="utf-8")
         publisher.not_found_path.write_text(not_found_html, encoding="utf-8")
         publisher.nojekyll_path.touch()

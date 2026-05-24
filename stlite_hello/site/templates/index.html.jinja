@@ -29,7 +29,7 @@
     </style>
   </head>
   <body>
-    <streamlit-app src="./app.py">
+    <streamlit-app src="./{{ entrypoint }}">
 {% for path in package_files %}
       <app-file name="{{ path }}" url="./{{ path }}"></app-file>
 {% endfor %}

@@ -4,22 +4,12 @@ import pandera as pa
 import pytest
 from pandera.typing import DataFrame
 
-from stlite_hello import (
+from stlite_hello.charts import (
     WaveChartParams,
     WaveData,
     build_sine_wave_chart,
     wave_dataframe,
 )
-
-
-@pytest.fixture
-def default_params() -> WaveChartParams:
-    return WaveChartParams(waves=3, amplitude=1.0, points=120)
-
-
-@pytest.fixture
-def default_wave_data(default_params: WaveChartParams) -> DataFrame[WaveData]:
-    return wave_dataframe(default_params)
 
 
 def test_wave_data_rejects_invalid_columns() -> None:
