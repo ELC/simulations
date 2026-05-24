@@ -4,7 +4,7 @@ from functools import cached_property
 from pathlib import Path
 from typing import TypedDict, cast
 
-from jinja2 import Environment, FileSystemLoader
+from jinja2 import Environment, FileSystemLoader, select_autoescape
 from pydantic import AliasChoices, Field
 from pydantic_extra_types.semantic_version import SemanticVersion
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -56,7 +56,7 @@ class SiteSettings(BaseSettings):
     def jinja_environment(self) -> Environment:
         return Environment(
             loader=FileSystemLoader(self.templates_dir),
-            autoescape=_autoescape_html_only,  # noqa: S701
+            autoescape=select_autoescape(["html"]),
         )
 
     @cached_property
@@ -69,10 +69,6 @@ class SiteSettings(BaseSettings):
     @cached_property
     def project_dependency_specifications(self) -> Sequence[str]:
         return self.pyproject["project"]["dependencies"]
-
-
-def _autoescape_html_only(template_name: str | None) -> bool:
-    return template_name is not None and template_name.endswith((".html", ".html.jinja"))
 
 
 SITE_SETTINGS = SiteSettings()

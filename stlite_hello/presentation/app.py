@@ -10,7 +10,7 @@ def main() -> None:
         [
             st.Page(home_page, title="Home", icon="🏠"),
             st.Page(charts_page, title="Wave charts", icon="📈"),
-            st.Page(about_page, title="About", icon="ℹ️"),
+            st.Page(about_page, title="About", icon="📖"),
         ],
         position="sidebar",
     )
