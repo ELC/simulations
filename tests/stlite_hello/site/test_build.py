@@ -1,0 +1,66 @@
+import os
+import runpy
+from pathlib import Path
+
+import pytest
+
+from stlite_hello.site import SITE_SETTINGS, load_browser_requirements, main
+
+
+def test_load_browser_requirements_aligns_to_pyodide_bundle() -> None:
+    requirements = load_browser_requirements(
+        project_dependency_specifications=SITE_SETTINGS.project_dependency_specifications,
+        pyodide_bundle_versions=SITE_SETTINGS.pyodide_bundle_versions,
+    )
+
+    bundle_versions = SITE_SETTINGS.pyodide_bundle_versions
+
+    for name, version in bundle_versions.items():  # pylint: disable=no-member
+        assert f"{name}=={version}" in requirements.specs
+
+
+def test_site_module_main_builds_default_output(tmp_path: Path) -> None:
+    original_cwd = Path.cwd()
+    try:
+        os.chdir(tmp_path)
+        runpy.run_module("stlite_hello.site", run_name="__main__")
+    finally:
+        os.chdir(original_cwd)
+
+    site_dir = tmp_path / SITE_SETTINGS.default_output_dir
+    assert site_dir.is_dir()
+    assert (site_dir / "index.html").is_file()
+
+
+def test_main_aligns_browser_requirements_to_pyodide_bundle(
+    tmp_path: Path,
+) -> None:
+    original_cwd = Path.cwd()
+    try:
+        os.chdir(tmp_path)
+        destination = main()
+    finally:
+        os.chdir(original_cwd)
+
+    index_html = (destination.resolve() / "index.html").read_text(encoding="utf-8")
+
+    bundle_versions = SITE_SETTINGS.pyodide_bundle_versions
+
+    for name, version in bundle_versions.items():  # pylint: disable=no-member
+        assert f"{name}=={version}" in index_html
+
+
+def test_main_prints_destination(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    original_cwd = Path.cwd()
+    try:
+        os.chdir(tmp_path)
+        destination = main()
+        expected_destination = str(destination.resolve())
+    finally:
+        os.chdir(original_cwd)
+
+    captured = capsys.readouterr().out
+    assert expected_destination in captured
