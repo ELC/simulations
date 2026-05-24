@@ -12,9 +12,11 @@ from stlite_hello.site import (
     Requirement,
     Requirements,
     RequirementsAdapter,
+    SemanticVersion,
     SiteBuilder,
     SiteFilePublisher,
     SiteTemplateRenderer,
+    build_default_site,
 )
 from stlite_hello.site import main as build_site
 
@@ -88,10 +90,7 @@ def test_build_site_writes_static_assets(site_dir: Path) -> None:
 def test_build_site_excludes_build_tooling_from_package_copy(site_dir: Path) -> None:
     assert not (site_dir / "stlite_hello" / "site").exists()
     assert not (site_dir / "stlite_hello" / "__main__.py").exists()
-    assert not any(
-        path.name == "__pycache__"
-        for path in (site_dir / "stlite_hello").rglob("*")
-    )
+    assert not any(path.name == "__pycache__" for path in (site_dir / "stlite_hello").rglob("*"))
 
 
 def test_index_html_references_stlite_and_requirements(
@@ -230,6 +229,55 @@ def test_browser_requirements_accepts_requirements_mapping() -> None:
     )
 
     assert loaded.names == ["altair"]
+
+
+def test_requirements_aligned_to_overrides_known_names() -> None:
+    requirements = Requirements.model_validate(
+        {"requirements": ["altair==6.5.0", "numpy==2.4.0", "pydantic==2.12.5"]},
+    )
+
+    aligned = requirements.aligned_to(
+        {
+            "altair": SemanticVersion.parse("6.0.0"),
+            "numpy": SemanticVersion.parse("2.2.5"),
+        },
+    )
+
+    assert aligned.specs == ["altair==6.0.0", "numpy==2.2.5", "pydantic==2.12.5"]
+
+
+def test_requirements_aligned_to_keeps_versions_without_overrides() -> None:
+    requirements = Requirements.model_validate(
+        {"requirements": ["pydantic==2.12.5"]},
+    )
+
+    aligned = requirements.aligned_to({})
+
+    assert aligned.specs == ["pydantic==2.12.5"]
+
+
+def test_pyodide_bundle_versions_pins_binary_packages() -> None:
+    bundle = SITE_SETTINGS.pyodide_bundle_versions
+
+    assert bundle["altair"] == SemanticVersion.parse("6.0.0")
+    assert bundle["numpy"] == SemanticVersion.parse("2.2.5")
+    assert bundle["pandas"] == SemanticVersion.parse("2.3.3")
+
+
+def test_build_default_site_aligns_browser_requirements_to_pyodide_bundle(
+    tmp_path: Path,
+) -> None:
+    original_cwd = Path.cwd()
+    try:
+        os.chdir(tmp_path)
+        destination = build_default_site()
+    finally:
+        os.chdir(original_cwd)
+
+    index_html = (destination / "index.html").read_text(encoding="utf-8")
+
+    for name, version in SITE_SETTINGS.pyodide_bundle_versions.items():
+        assert f"{name}=={version}" in index_html
 
 
 def test_template_renderer_substitutes_version_and_requirements(

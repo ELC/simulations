@@ -13,11 +13,11 @@ name = "stlite-hello"
 version = "0.1.0"
 description = "Hello-world Stlite app with Altair charts for GitHub Pages"
 readme = "README.md"
-requires-python = ">=3.13"
+requires-python = ">=3.13,<3.14"
 dependencies = [
-    "altair==6.0.0",
+    "altair==6.1.0",
     "numpy==2.2.5",
-    "pandas==2.3.3",
+    "pandas==3.0.3",
     "pydantic==2.12.5",
     "pydantic-extra-types==2.11.1",
     "semver==3.0.4",
@@ -30,7 +30,7 @@ dependencies = [
 dev = [
     "jinja2==3.1.6",
     "mypy==2.1.0",
-    "pandas-stubs==2.3.0.250703",
+    "pandas-stubs==3.0.0.260204",
     "poethepoet==0.46.0",
     "prek==0.4.0",
     "pytest==9.0.3",

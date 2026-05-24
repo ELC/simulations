@@ -15,10 +15,9 @@ def main() -> None:
     st.write(f"Hello, **{name}**! Move the sliders to redraw the chart.")
 
     params = WaveChartParams(waves=waves, amplitude=amplitude)
-    st.altair_chart(
-        build_sine_wave_chart(wave_dataframe(params), params=params),
-        use_container_width=True,
-    )
+    wave_data = wave_dataframe(params)
+    chart = build_sine_wave_chart(wave_data, params=params)
+    st.altair_chart(chart, width="stretch")
 
 
 if __name__ == "__main__":

@@ -16,19 +16,21 @@ def main(
     browser_requirements: Requirements,
 ) -> Path:
     ready = (
-        SiteBuilder.prepare(output_dir)
+        SiteBuilder
+        .prepare(output_dir)
         .with_browser_app(app_module)
         .with_index(SITE_SETTINGS.stlite_browser_version, browser_requirements)
     )
     destination = publisher.publish_site(ready)
-    print(f"Static site written to {destination.resolve()}")
+    print(f"Static site written to {destination.resolve()}")  # noqa: T201
     return destination
 
 
 def build_default_site() -> Path:
-    browser_requirements = RequirementsAdapter.validate_python(
+    project_requirements = RequirementsAdapter.validate_python(
         {"requirements": SITE_SETTINGS.project_dependency_specifications},
     )
+    browser_requirements = project_requirements.aligned_to(SITE_SETTINGS.pyodide_bundle_versions)
     templates = SiteTemplateRenderer(jinja_environment=SITE_SETTINGS.jinja_environment)
     publisher = SiteFilePublisher(
         templates=templates,

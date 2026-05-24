@@ -49,9 +49,7 @@ class SiteFilePublisher(FrozenSiteModel):
             ),
         )
         return sorted(
-            path.relative_to(self.destination).as_posix()
-            for path in destination.rglob("*")
-            if path.is_file()
+            path.relative_to(self.destination).as_posix() for path in destination.rglob("*") if path.is_file()
         )
 
     def publish_site(self, ready: "SiteBuilderReady") -> Path:
