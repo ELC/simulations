@@ -1,11 +1,13 @@
 from pathlib import Path
 
+import pytest
+
 from stlite_hello.site import (
     SITE_SETTINGS,
     Requirements,
+    SiteBuilderReady,
     SiteFilePublisher,
     SiteTemplateRenderer,
-    prepare_site,
 )
 
 
@@ -36,42 +38,46 @@ def test_clean_is_noop_when_output_dir_missing(
     assert not missing.exists()
 
 
-def test_build_site_writes_static_assets(
-    site_dir: Path,
+@pytest.mark.usefixtures("_publish_site")
+def test_build_site_writes_package_layout(
+    output_dir: Path,
     presentation_entrypoint: str,
 ) -> None:
-    expected_files = ("index.html", "404.html", ".nojekyll")
-    for filename in expected_files:
-        assert (site_dir / filename).is_file()
-    assert (site_dir / "stlite_hello").is_dir()
-    assert (site_dir / presentation_entrypoint).is_file()
-    assert (site_dir / "stlite_hello" / "charts.py").is_file()
-    assert (site_dir / "stlite_hello" / "presentation" / "pages" / "home.py").is_file()
-    assert (site_dir / "stlite_hello" / "presentation" / "pages" / "charts.py").is_file()
+    package = output_dir / "stlite_hello"
+
+    assert all((output_dir / name).is_file() for name in ("index.html", "404.html", ".nojekyll"))
+    assert all(
+        (output_dir / path).is_file()
+        for path in (
+            presentation_entrypoint,
+            "stlite_hello/charts.py",
+            "stlite_hello/presentation/pages/home.py",
+            "stlite_hello/presentation/pages/charts.py",
+        )
+    )
+    assert not (package / "site").exists()
+    assert not (package / "__main__.py").exists()
+    assert not any(path.name == "__pycache__" for path in package.rglob("*"))
 
 
-def test_build_site_excludes_build_tooling_from_package_copy(site_dir: Path) -> None:
-    assert not (site_dir / "stlite_hello" / "site").exists()
-    assert not (site_dir / "stlite_hello" / "__main__.py").exists()
-    assert not any(path.name == "__pycache__" for path in (site_dir / "stlite_hello").rglob("*"))
-
-
+@pytest.mark.usefixtures("_publish_site")
 def test_index_html_references_stlite_and_requirements(
-    site_dir: Path,
+    output_dir: Path,
     browser_requirements: Requirements,
 ) -> None:
-    index_html = (site_dir / "index.html").read_text(encoding="utf-8")
+    index_html = (output_dir / "index.html").read_text(encoding="utf-8")
 
     assert f"@stlite/browser@{SITE_SETTINGS.stlite_browser_version}" in index_html
     for spec in browser_requirements.specs:
         assert spec in index_html
 
 
+@pytest.mark.usefixtures("_publish_site")
 def test_index_html_mounts_every_package_file(
-    site_dir: Path,
+    output_dir: Path,
     presentation_entrypoint: str,
 ) -> None:
-    index_html = (site_dir / "index.html").read_text(encoding="utf-8")
+    index_html = (output_dir / "index.html").read_text(encoding="utf-8")
 
     expected_files = (
         "stlite_hello/__init__.py",
@@ -87,11 +93,12 @@ def test_index_html_mounts_every_package_file(
         assert f'url="./{relative_path}"' in index_html
 
 
+@pytest.mark.usefixtures("_publish_site")
 def test_index_html_uses_presentation_entrypoint(
-    site_dir: Path,
+    output_dir: Path,
     presentation_entrypoint: str,
 ) -> None:
-    index_html = (site_dir / "index.html").read_text(encoding="utf-8")
+    index_html = (output_dir / "index.html").read_text(encoding="utf-8")
 
     assert f'<streamlit-app src="./{presentation_entrypoint}">' in index_html
 
@@ -99,7 +106,7 @@ def test_index_html_uses_presentation_entrypoint(
 def test_build_site_replaces_existing_package_copy(
     output_dir: Path,
     file_publisher: SiteFilePublisher,
-    browser_requirements: Requirements,
+    site_builder_ready: SiteBuilderReady,
     presentation_entrypoint: str,
 ) -> None:
     stale_package = output_dir / "stlite_hello"
@@ -107,13 +114,7 @@ def test_build_site_replaces_existing_package_copy(
     stale_marker = stale_package / "stale.py"
     stale_marker.write_text("# stale\n", encoding="utf-8")
 
-    file_publisher.publish_site(
-        prepare_site(
-            output_dir=output_dir,
-            stlite_browser_version=SITE_SETTINGS.stlite_browser_version,
-            browser_requirements=browser_requirements,
-        ),
-    )
+    file_publisher.publish_site(site_builder_ready)
 
     assert not stale_marker.exists()
     assert (output_dir / presentation_entrypoint).is_file()

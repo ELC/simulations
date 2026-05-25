@@ -10,5 +10,15 @@ def default_params() -> WaveChartParams:
 
 
 @pytest.fixture
+def title_params() -> WaveChartParams:
+    return WaveChartParams(waves=5, amplitude=1.5)
+
+
+@pytest.fixture
 def default_wave_data(default_params: WaveChartParams) -> DataFrame[WaveData]:
     return wave_dataframe(default_params)
+
+
+@pytest.fixture
+def title_wave_data(title_params: WaveChartParams) -> DataFrame[WaveData]:
+    return wave_dataframe(title_params)

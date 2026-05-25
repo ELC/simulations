@@ -6,7 +6,9 @@ from stlite_hello.site import (
     SITE_SETTINGS,
     Requirements,
     RequirementsAdapter,
+    SiteBuilderReady,
     SiteFilePublisher,
+    SiteSettings,
     SiteTemplateRenderer,
     prepare_site,
 )
@@ -19,9 +21,7 @@ def presentation_entrypoint() -> str:
 
 @pytest.fixture
 def output_dir(tmp_path: Path) -> Path:
-    site_output = tmp_path / "_site"
-    site_output.mkdir()
-    return site_output
+    return tmp_path
 
 
 @pytest.fixture
@@ -48,15 +48,33 @@ def file_publisher(
 
 
 @pytest.fixture
-def site_dir(
+def site_builder_ready(
     output_dir: Path,
-    file_publisher: SiteFilePublisher,
     browser_requirements: Requirements,
-) -> Path:
-    return file_publisher.publish_site(
-        prepare_site(
-            output_dir=output_dir,
-            stlite_browser_version=SITE_SETTINGS.stlite_browser_version,
-            browser_requirements=browser_requirements,
-        ),
+) -> SiteBuilderReady:
+    return prepare_site(
+        output_dir=output_dir,
+        stlite_browser_version=SITE_SETTINGS.stlite_browser_version,
+        browser_requirements=browser_requirements,
     )
+
+
+@pytest.fixture
+def patched_site_settings(tmp_path: Path) -> SiteSettings:
+    return SITE_SETTINGS.model_copy(update={"default_output_dir": tmp_path})
+
+
+@pytest.fixture
+def _patch_site_settings(
+    monkeypatch: pytest.MonkeyPatch,
+    patched_site_settings: SiteSettings,
+) -> None:
+    monkeypatch.setattr("stlite_hello.site.build.SITE_SETTINGS", patched_site_settings)
+
+
+@pytest.fixture
+def _publish_site(
+    file_publisher: SiteFilePublisher,
+    site_builder_ready: SiteBuilderReady,
+) -> None:
+    file_publisher.publish_site(site_builder_ready)

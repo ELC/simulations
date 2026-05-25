@@ -49,17 +49,12 @@ def test_main_aligns_browser_requirements_to_pyodide_bundle(
         assert f"{name}=={version}" in index_html
 
 
+@pytest.mark.usefixtures("_patch_site_settings")
 def test_main_prints_destination(
     tmp_path: Path,
     capsys: pytest.CaptureFixture[str],
 ) -> None:
-    original_cwd = Path.cwd()
-    try:
-        os.chdir(tmp_path)
-        destination = main()
-        expected_destination = str(destination.resolve())
-    finally:
-        os.chdir(original_cwd)
+    main()
 
     captured = capsys.readouterr().out
-    assert expected_destination in captured
+    assert f"Static site written to {tmp_path.resolve()}" in captured

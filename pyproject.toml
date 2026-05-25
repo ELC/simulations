@@ -64,6 +64,7 @@ source = [
 ]
 omit = [
     "stlite_hello/__main__.py",
+    "stlite_hello/pyarrow_compat.py",
 ]
 
 [tool.coverage.report]
