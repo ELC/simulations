@@ -46,6 +46,4 @@ def test_build_sine_wave_chart_title_reflects_params(
 ) -> None:
     chart = build_sine_wave_chart(title_wave_data, params=title_params)
 
-    assert chart.to_dict()["title"] == (
-        f"Sine wave ({title_params.waves} cycles, amplitude {title_params.amplitude})"
-    )
+    assert chart.to_dict()["title"] == (f"Sine wave ({title_params.waves} cycles, amplitude {title_params.amplitude})")

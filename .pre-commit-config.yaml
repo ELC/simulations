@@ -1,4 +1,4 @@
-exclude: ^_site/
+exclude: ^(_site/|\.venv/)
 
 default_language_version:
   python: python3.13
