@@ -15,8 +15,8 @@ from stlite_hello.site import (
 
 
 @pytest.fixture
-def presentation_entrypoint() -> str:
-    return "stlite_hello/presentation/app.py"
+def app_entrypoint() -> str:
+    return "stlite_hello/app.py"
 
 
 @pytest.fixture

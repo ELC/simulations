@@ -1,6 +1,7 @@
 import streamlit as st
+from streamlit.navigation.page import StreamlitPage
 
-from stlite_hello.charts import WaveChartParams, build_sine_wave_chart, wave_dataframe
+from .charts import WaveChartParams, build_sine_wave_chart, wave_dataframe
 
 
 def charts_page() -> None:
@@ -14,3 +15,7 @@ def charts_page() -> None:
     wave_data = wave_dataframe(params)
     chart = build_sine_wave_chart(wave_data, params=params)
     st.altair_chart(chart, width="stretch")
+
+
+def pages() -> list[StreamlitPage]:
+    return [st.Page(charts_page, title="Wave charts", icon="📈")]

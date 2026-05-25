@@ -1,7 +1,7 @@
 import pytest
 from pandera.typing import DataFrame
 
-from stlite_hello.charts import (
+from stlite_hello.features.charts import (
     WaveChartParams,
     WaveData,
     build_sine_wave_chart,

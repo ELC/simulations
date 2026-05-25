@@ -1,7 +1,7 @@
 import pytest
 from streamlit.testing.v1 import AppTest
 
-from stlite_hello.charts import WaveChartParams
+from stlite_hello.features.charts import WaveChartParams
 
 
 def test_charts_page_renders_wave_controls(

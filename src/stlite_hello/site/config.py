@@ -50,7 +50,7 @@ class SiteSettings(BaseSettings):
 
     @cached_property
     def pyproject_path(self) -> Path:
-        return self.package_dir.parent.parent / "pyproject.toml"
+        return self.package_dir.parent.parent.parent / "pyproject.toml"
 
     @cached_property
     def jinja_environment(self) -> Environment:

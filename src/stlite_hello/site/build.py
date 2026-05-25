@@ -3,7 +3,7 @@ from pathlib import Path
 
 from pydantic_extra_types.semantic_version import SemanticVersion
 
-from stlite_hello.presentation import app as app_module
+from stlite_hello import app as app_module
 
 from .builder import SiteBuilder, SiteBuilderReady
 from .config import SITE_SETTINGS

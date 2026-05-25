@@ -1,7 +1,7 @@
 import pytest
 from pandera.typing import DataFrame
 
-from stlite_hello.charts import WaveChartParams, WaveData, wave_dataframe
+from stlite_hello.features.charts import WaveChartParams, WaveData, wave_dataframe
 
 
 @pytest.fixture

@@ -1,12 +1,9 @@
 [build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
+requires = ["uv_build>=0.11.16,<0.12"]
+build-backend = "uv_build"
 
-[tool.hatch.build.targets.wheel]
-packages = ["stlite_hello"]
-
-[tool.hatch.build.targets.wheel.force-include]
-"stlite_hello/site/templates" = "stlite_hello/site/templates"
+[tool.uv.build-backend]
+module-name = "stlite_hello"
 
 [project]
 name = "stlite-hello"
@@ -46,11 +43,17 @@ serve-site = { sequence = [
     "build-site",
     { shell = "python -m http.server 8000 --directory _site" },
 ] }
-dev = "streamlit run stlite_hello/presentation/app.py"
+dev = "streamlit run src/stlite_hello/app.py"
 ci = { sequence = ["check", "test", "build-site"] }
+
+[tool.poe.tasks.dev-feature]
+help = "Run one feature slice (home, charts, or about)"
+cmd = "streamlit run src/stlite_hello/features/${feature}/__main__.py"
+args = [{ name = "feature", positional = true, help = "Feature slice: home | charts | about" }]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+pythonpath = ["src"]
 addopts = [
     "-vv",
     "--cov",
@@ -59,12 +62,13 @@ addopts = [
 
 [tool.coverage.run]
 source = [
-    "stlite_hello",
+    "src/stlite_hello",
     "tests",
 ]
 omit = [
-    "stlite_hello/__main__.py",
-    "stlite_hello/pyarrow_compat.py",
+    "src/stlite_hello/__main__.py",
+    "src/stlite_hello/features/*/__main__.py",
+    "src/stlite_hello/pyarrow_compat.py",
 ]
 
 [tool.coverage.report]
@@ -92,6 +96,7 @@ exclude_lines = [
 [tool.mypy]
 strict = true
 follow_imports = "normal"
+mypy_path = "src"
 python_version = "3.13"
 disallow_any_unimported = true
 disallow_any_generics = true
@@ -120,6 +125,7 @@ fix = true
 preview = true
 unsafe-fixes = true
 line-length = 120
+src = ["src"]
 
 [tool.ruff.lint]
 extend-select = ["ALL"]
