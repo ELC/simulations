@@ -8,16 +8,16 @@ from stlite_hello.analysis import (
     run_replicates,
     summarize,
 )
-from stlite_hello.features.cournot.model import COURNOT_FEATURE, CournotConfig, simulate_once
+from stlite_hello.features.sugarscape.model import SUGARSCAPE_FEATURE, SugarscapeConfig, simulate_once
 from stlite_hello.presentation import DownloadInputs
 
 from . import sections
 from .sidebar import SidebarInputs, build_config
 from .special_chart import SpecialChartInputs, render_special_chart
-from .view_models import COURNOT_COPY, COURNOT_SPECIAL_HEADING
+from .view_models import SUGARSCAPE_COPY, SUGARSCAPE_SPECIAL_HEADING
 
 
-def _run(config: CournotConfig) -> RunBundle:
+def _run(config: SugarscapeConfig) -> RunBundle:
     return run_replicates(
         simulate_once=simulate_once,
         params=config.params,
@@ -25,15 +25,15 @@ def _run(config: CournotConfig) -> RunBundle:
     )
 
 
-def _summarize(*, config: CournotConfig, bundle: RunBundle) -> SimulationReport:
+def _summarize(*, config: SugarscapeConfig, bundle: RunBundle) -> SimulationReport:
     return summarize(bundle=bundle, config=config)
 
 
 def render() -> None:
-    """Render the Cournot page end-to-end."""
-    copy = COURNOT_COPY
+    """Render the Sugarscape page end-to-end."""
+    copy = SUGARSCAPE_COPY
     sections.render_page_header(copy.page_header)
-    defaults = CournotConfig()
+    defaults = SugarscapeConfig()
     config = build_config(SidebarInputs(defaults=defaults))
     with st.spinner(f"Running {config.runs} replicates..."):
         bundle = _run(config)
@@ -53,12 +53,12 @@ def render() -> None:
         SpecialChartInputs(
             params=config.params,
             seed=config.seed,
-            heading=COURNOT_SPECIAL_HEADING,
+            heading=SUGARSCAPE_SPECIAL_HEADING,
         ),
     )
     sections.render_download(
         DownloadInputs(
-            feature=COURNOT_FEATURE,
+            feature=SUGARSCAPE_FEATURE,
             config=config,
             params=config.params,
             bundle=bundle,

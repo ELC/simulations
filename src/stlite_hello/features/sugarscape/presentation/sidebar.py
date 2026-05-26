@@ -1,4 +1,4 @@
-"""Sidebar: turn user input into a frozen :class:`CournotConfig`."""
+"""Sidebar: turn user input into a frozen :class:`SugarscapeConfig`."""
 
 from typing import Literal
 
@@ -6,7 +6,7 @@ import streamlit as st
 from pydantic import BaseModel, ConfigDict
 
 from stlite_hello.analysis import AggregationConfig
-from stlite_hello.features.cournot.model import AdvancedParams, CournotConfig, SimpleParams
+from stlite_hello.features.sugarscape.model import AdvancedParams, SimpleParams, SugarscapeConfig
 from stlite_hello.presentation import (
     AdvancedToggleLabels,
     AggregationSidebarInputs,
@@ -14,9 +14,9 @@ from stlite_hello.presentation import (
     build_aggregation_config,
 )
 
-from .view_models import COURNOT_COPY
+from .view_models import SUGARSCAPE_COPY
 
-_KEY_PREFIX = "cournot"
+_KEY_PREFIX = "sugarscape"
 
 
 class _SidebarParams(BaseModel):
@@ -27,75 +27,76 @@ class _SidebarParams(BaseModel):
 
 
 def _render_simple_form(defaults: SimpleParams) -> AdvancedParams:
-    n_firms = st.slider(
-        "Number of firms",
-        min_value=2,
-        max_value=50,
-        value=defaults.n_firms,
+    n_agents = st.slider(
+        "Number of agents",
+        min_value=4,
+        max_value=400,
+        value=defaults.n_agents,
         step=1,
-        key=f"{_KEY_PREFIX}_simple_firms",
+        key=f"{_KEY_PREFIX}_simple_agents",
     )
     n_steps = st.slider(
-        "Best-response iterations",
+        "Simulation steps",
         min_value=5,
-        max_value=1_000,
+        max_value=500,
         value=defaults.n_steps,
         step=5,
         key=f"{_KEY_PREFIX}_simple_steps",
     )
-    inertia = st.slider(
-        "Adjustment inertia",
-        min_value=0.0,
-        max_value=0.99,
-        value=defaults.inertia,
-        step=0.01,
-        key=f"{_KEY_PREFIX}_simple_inertia",
+    vision = st.slider(
+        "Vision radius",
+        min_value=1,
+        max_value=10,
+        value=defaults.vision,
+        step=1,
+        key=f"{_KEY_PREFIX}_simple_vision",
     )
     return AdvancedParams(
-        n_firms=int(n_firms),
+        n_agents=int(n_agents),
         n_steps=int(n_steps),
-        inertia=float(inertia),
+        vision=int(vision),
     )
 
 
 def _render_advanced_form(defaults: AdvancedParams) -> AdvancedParams:
     simple = _render_simple_form(defaults)
-    intercept = st.number_input(
-        "Demand intercept a",
-        min_value=1.0,
-        value=defaults.intercept,
-        step=1.0,
-        key=f"{_KEY_PREFIX}_advanced_intercept",
+    grid_size = st.slider(
+        "Grid edge length",
+        min_value=5,
+        max_value=60,
+        value=defaults.grid_size,
+        step=1,
+        key=f"{_KEY_PREFIX}_advanced_grid",
     )
-    slope = st.number_input(
-        "Demand slope b",
+    regrowth_rate = st.number_input(
+        "Sugar regrowth per step",
         min_value=0.01,
-        value=defaults.slope,
-        step=0.01,
-        key=f"{_KEY_PREFIX}_advanced_slope",
+        value=defaults.regrowth_rate,
+        step=0.1,
+        key=f"{_KEY_PREFIX}_advanced_regrowth",
     )
-    cost_mean = st.number_input(
-        "Mean marginal cost",
-        min_value=0.0,
-        value=defaults.cost_mean,
-        step=1.0,
-        key=f"{_KEY_PREFIX}_advanced_cost_mean",
+    metabolism_mean = st.number_input(
+        "Mean metabolism per step",
+        min_value=0.01,
+        value=defaults.metabolism_mean,
+        step=0.1,
+        key=f"{_KEY_PREFIX}_advanced_metabolism",
     )
-    cost_spread = st.number_input(
-        "Cost spread (half-width)",
+    initial_endowment = st.number_input(
+        "Initial sugar endowment",
         min_value=0.0,
-        value=defaults.cost_spread,
+        value=defaults.initial_endowment,
         step=1.0,
-        key=f"{_KEY_PREFIX}_advanced_cost_spread",
+        key=f"{_KEY_PREFIX}_advanced_endowment",
     )
     return AdvancedParams(
-        n_firms=simple.n_firms,
+        n_agents=simple.n_agents,
         n_steps=simple.n_steps,
-        inertia=simple.inertia,
-        intercept=float(intercept),
-        slope=float(slope),
-        cost_mean=float(cost_mean),
-        cost_spread=float(cost_spread),
+        vision=simple.vision,
+        grid_size=int(grid_size),
+        regrowth_rate=float(regrowth_rate),
+        metabolism_mean=float(metabolism_mean),
+        initial_endowment=float(initial_endowment),
     )
 
 
@@ -124,9 +125,9 @@ def _render_params(defaults: AdvancedParams, labels: AdvancedToggleLabels) -> _S
             view: Literal["simple", "advanced"] = "advanced"
         else:
             simple_defaults = SimpleParams(
-                n_firms=defaults.n_firms,
+                n_agents=defaults.n_agents,
                 n_steps=defaults.n_steps,
-                inertia=defaults.inertia,
+                vision=defaults.vision,
             )
             params = _render_simple_form(simple_defaults)
             view = "simple"
@@ -136,20 +137,20 @@ def _render_params(defaults: AdvancedParams, labels: AdvancedToggleLabels) -> _S
 class SidebarInputs(BaseModel):
     model_config = ConfigDict(frozen=True)
 
-    defaults: CournotConfig
+    defaults: SugarscapeConfig
 
 
-def build_config(inputs: SidebarInputs) -> CournotConfig:
-    """Render the sidebar and return a frozen :class:`CournotConfig`.
+def build_config(inputs: SidebarInputs) -> SugarscapeConfig:
+    """Render the sidebar and return a frozen :class:`SugarscapeConfig`.
 
     Returns
     -------
-    CournotConfig
-        Fully validated, no primitives in the public signature.
+    SugarscapeConfig
+        Fully validated config; no primitives in the public signature.
     """
     defaults = inputs.defaults
-    sidebar_params = _render_params(defaults.params, COURNOT_COPY.view_toggle)
-    seed = _render_seed(COURNOT_COPY.seed, defaults.seed)
+    sidebar_params = _render_params(defaults.params, SUGARSCAPE_COPY.view_toggle)
+    seed = _render_seed(SUGARSCAPE_COPY.seed, defaults.seed)
     aggregation = build_aggregation_config(
         AggregationSidebarInputs(
             defaults=AggregationConfig(
@@ -160,11 +161,11 @@ def build_config(inputs: SidebarInputs) -> CournotConfig:
                 confidence_level=defaults.confidence_level,
                 bootstrap_method=defaults.bootstrap_method,
             ),
-            labels=COURNOT_COPY.sidebar,
+            labels=SUGARSCAPE_COPY.sidebar,
             key_prefix=_KEY_PREFIX,
         ),
     )
-    return CournotConfig(
+    return SugarscapeConfig(
         runs=aggregation.runs,
         seed=aggregation.seed,
         trajectory_step_samples=aggregation.trajectory_step_samples,

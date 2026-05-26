@@ -11,7 +11,7 @@ from numpy.typing import NDArray
 from pandera.typing import DataFrame
 from pydantic import BaseModel, ConfigDict
 
-from ..model import AdvancedParams, costs_for_seed, quantity_trajectory
+from stlite_hello.features.cournot.model import AdvancedParams, costs_for_seed, quantity_trajectory
 
 _DEFAULT_HEIGHT = 360
 
@@ -58,6 +58,18 @@ def _select_firms(costs: NDArray[np.float64]) -> tuple[int, int]:
     return int(order[0]), int(order[-1])
 
 
+def _best_response_endpoints(
+    *,
+    cost: float,
+    intercept: float,
+    slope: float,
+    max_q: float,
+) -> tuple[float, float]:
+    at_zero = max(0.0, (intercept - cost) / (2.0 * slope))
+    at_max = max(0.0, (intercept - cost - slope * max_q) / (2.0 * slope))
+    return at_zero, at_max
+
+
 def build_trajectory_data(
     *,
     params: AdvancedParams,
@@ -70,11 +82,9 @@ def build_trajectory_data(
     tuple[DataFrame[BestResponseTrajectoryData], DataFrame[BestResponseLinesData]]
         Trajectory points and the two best-response lines.
     """
-    parent = np.random.SeedSequence(seed)
-    first_child = parent.spawn(1)[0]
-    rng = np.random.default_rng(first_child)
+    first_child = np.random.SeedSequence(seed).spawn(1)[0]
     trajectory = quantity_trajectory(params, np.random.default_rng(first_child))
-    costs = costs_for_seed(params, rng)
+    costs = costs_for_seed(params, np.random.default_rng(first_child))
     firm_a, firm_b = _select_firms(costs)
     trace = pd.DataFrame(
         {
@@ -84,19 +94,22 @@ def build_trajectory_data(
         },
     )
     max_q = float(max(trajectory.max(), params.intercept / params.slope))
-    line_a_self_at_zero = max(0.0, (params.intercept - costs[firm_a]) / (2.0 * params.slope))
-    line_a_self_at_max = max(0.0, (params.intercept - costs[firm_a] - params.slope * max_q) / (2.0 * params.slope))
-    line_b_self_at_zero = max(0.0, (params.intercept - costs[firm_b]) / (2.0 * params.slope))
-    line_b_self_at_max = max(0.0, (params.intercept - costs[firm_b] - params.slope * max_q) / (2.0 * params.slope))
+    a_zero, a_max = _best_response_endpoints(
+        cost=float(costs[firm_a]),
+        intercept=params.intercept,
+        slope=params.slope,
+        max_q=max_q,
+    )
+    b_zero, b_max = _best_response_endpoints(
+        cost=float(costs[firm_b]),
+        intercept=params.intercept,
+        slope=params.slope,
+        max_q=max_q,
+    )
     lines = pd.DataFrame(
         {
             "firm": ["Firm A", "Firm A", "Firm B", "Firm B"],
-            "q_self": [
-                line_a_self_at_zero,
-                line_a_self_at_max,
-                line_b_self_at_zero,
-                line_b_self_at_max,
-            ],
+            "q_self": [a_zero, a_max, b_zero, b_max],
             "q_other": [0.0, max_q, 0.0, max_q],
         },
     )

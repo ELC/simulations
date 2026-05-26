@@ -7,7 +7,6 @@ from pydantic import BaseModel, ConfigDict, Field
 
 class AggregationConfig(BaseModel):
     """Knobs shared across every simulation (runs, seed, bootstrap, snapshots).
-
     Each feature subclasses this with its own ``params`` payload and a
     feature-specific default seed (distinct from every other feature).
     """
