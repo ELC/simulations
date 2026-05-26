@@ -47,13 +47,16 @@ def test_browser_requirements_loads_project_dependencies(
 ) -> None:
     assert browser_requirements.names == [
         "altair",
+        "networkx",
         "numpy",
         "pandas",
+        "pandera",
         "pydantic",
         "pydantic-extra-types",
-        "semver",
         "pydantic-settings",
-        "pandera",
+        "scipy",
+        "semver",
+        "statsmodels",
     ]
 
 

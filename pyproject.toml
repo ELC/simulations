@@ -8,19 +8,22 @@ module-name = "stlite_hello"
 [project]
 name = "stlite-hello"
 version = "0.1.0"
-description = "Hello-world Stlite app with Altair charts for GitHub Pages"
+description = "Free-market simulations: in-browser Streamlit with bootstrap CIs, KDE, and best-fit distributions"
 readme = "README.md"
 requires-python = ">=3.13,<3.14"
 dependencies = [
     "altair==6.0.0",
+    "networkx==3.4.2",
     "numpy==2.2.5",
     "pandas==2.3.3",
+    "pandera==0.31.1",
     "pydantic==2.12.5",
     "pydantic-extra-types==2.11.1",
-    "semver==3.0.4",
     "pydantic-settings==2.14.1",
+    "scipy==1.14.1",
+    "semver==3.0.4",
+    "statsmodels==0.14.4",
     "streamlit==1.57.0",
-    "pandera==0.31.1",
 ]
 
 [dependency-groups]
@@ -30,6 +33,7 @@ dev = [
     "prek==0.4.0",
     "pytest==8.3.5",
     "pytest-cov==6.0.0",
+    "syrupy==5.2.0",
     "tomlkit>=0.15.0",
 ]
 
@@ -416,6 +420,7 @@ constraint-dependencies = [
 [tool.poe.tasks]
 test = "pytest"
 check = "prek run --all-files --verbose"
+snapshot-update = "pytest --snapshot-update"
 sync-pyodide-constraints = "python -m stlite_hello.pyodide_sync"
 check-pyodide-constraints = "python -m stlite_hello.pyodide_sync --ci"
 build-site = "python -m stlite_hello.site"
@@ -480,7 +485,7 @@ exclude_lines = [
 [tool.mypy]
 strict = true
 follow_imports = "normal"
-mypy_path = "src"
+mypy_path = "src:stubs"
 python_version = "3.13"
 disallow_any_unimported = true
 disallow_any_generics = true
