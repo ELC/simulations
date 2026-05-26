@@ -317,6 +317,89 @@ it to the parametrization there.
 
 ---
 
+## Simulation feature contract
+
+Every entry under `src/stlite_hello/features/<slice>/` is a free-market
+simulation that participates in the shared analysis + presentation pipeline.
+A slice **must** ship:
+
+1. **`model.py`** with:
+   - `SimpleParams` (2-4 knobs) and `AdvancedParams(SimpleParams)` (full
+     parametrisation), both frozen Pydantic `BaseModel`s with `Field`
+     bounds on every value.
+   - `<Slice>Config(AggregationConfig)` whose `seed` default is a
+     **distinct integer constant** unique to that slice and exported as
+     `<SLICE>_DEFAULT_SEED`.
+   - `<SLICE>_FEATURE` string constant used by `serialize_run`.
+   - `simulate_once(params, rng) -> ReplicateResult` whose
+     `focal_panel[t, i]` is the per-step focal quantity. The function
+     must be deterministic for a given `np.random.default_rng(seed)`.
+   - Any extra helper that replays the simulation for the special chart
+     (e.g. `final_orderbook`, `final_snapshot`, `labor_market_history`,
+     `final_graph`) so the chart never re-runs the analysis pipeline.
+
+2. **`presentation/`** subpackage with one file per concern:
+   - `view_models.py` — frozen `FeatureCopy` (with `PageHeader`,
+     `ExampleCallout`, `CommonChartHeadings`, sidebar/seed/toggle labels,
+     `DownloadHeading`, `special_chart_title`) plus the slice-specific
+     `*Heading` for the special chart. **All UI text lives here.**
+   - `sidebar.py` exposing `SidebarInputs` and `build_config(...)`. The
+     public surface must take a `SidebarInputs(defaults=<Slice>Config)`
+     and return the same frozen config type — never raw primitives.
+   - `sections.py` re-exports the shared section renderers from
+     `stlite_hello.presentation`, nothing more.
+   - `special_chart.py` with:
+     - One or more `pa.DataFrameModel`s for every dataframe the chart
+       consumes,
+     - A frozen `<Slice>Heading` Pydantic model,
+     - A `SpecialChartInputs` Pydantic model,
+     - Pure `build_*_chart(...)` returning `alt.TopLevelMixin`,
+     - `render_special_chart(inputs: SpecialChartInputs)` that calls
+       `st.altair_chart` with `width="stretch"` (cast to `alt.Chart`).
+   - `controller.py` orchestrating sidebar → `run_replicates` → `summarize`
+     → section renderers → special chart → `render_download`. Must not
+     contain any free-floating literal strings — pull them from the
+     `FeatureCopy` view model.
+
+3. **`page.py`** that exposes `pages() -> list[StreamlitPage]` with a
+   single `st.Page(render, ...)`. **No analysis or UI logic** beyond the
+   page construction.
+
+4. **`__main__.py`** containing only `from … import main` and the
+   `if __name__ == "__main__"` block.
+
+5. **`__init__.py`** re-exporting the model + presentation public API and
+   providing a `main()` that mounts the page via `st.navigation`.
+
+6. The slice is wired into `src/stlite_hello/features/__init__.py`
+   `navigation()` under the appropriate group, and into the
+   `dev-feature` poe task help string.
+
+### Test contract
+
+Mirror the layout under `tests/features/<slice>/`:
+
+```
+tests/features/<slice>/
+  conftest.py                                  # *_fast_params, *_fast_config
+  test_model.py                                # determinism + behavioural assertions
+  test_page.py                                 # pages() returns one StreamlitPage
+  test_main.py                                 # AppTest with session_state pre-populated
+  test_reproducibility.py                      # byte-identical run + round-trip export
+  presentation/
+    test_sidebar.py                            # AppTest covering Advanced view
+    test_special_chart.py                      # frame schema + chart layer count/title
+```
+
+`test_main.py` and `test_sidebar.py` **must** pre-populate `st.session_state`
+with small `<slice>_simple_*`, `<slice>_runs`, `<slice>_resamples`,
+`<slice>_trajectory_samples` and (for sidebar tests) `<slice>_advanced_*`
+keys to keep `AppTest.run(timeout=...)` under the timeout budget.
+
+Only one slice (`yard_sale`) keeps a syrupy snapshot of the export schema;
+the rest only assert byte-identical round-trips, because the shared schema
+is already snapshotted in `tests/analysis/test_export.py`.
+
 ## Adding a new pattern or variant — checklist
 
 1. Create the SUT package with its own `__init__.py` re-exporting its public API.
@@ -367,4 +450,4 @@ matching skill in the same change.
 
 ---
 
-_Last reviewed: 2026-05-23 (Python 3.13) — pytest cov in addopts; prek for lint/format._
+_Last reviewed: 2026-05-26 (Python 3.13) — seven free-market simulation slices in place; shared `analysis/` + `presentation/` packages; syrupy snapshots for export schema and yard-sale headline metrics._

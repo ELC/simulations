@@ -10,7 +10,7 @@ import streamlit as st
 from pandera.typing import DataFrame
 from pydantic import BaseModel, ConfigDict
 
-from ..model import AdvancedParams, final_graph
+from stlite_hello.features.preferential_attachment.model import AdvancedParams, final_graph
 
 _DEFAULT_HEIGHT = 360
 

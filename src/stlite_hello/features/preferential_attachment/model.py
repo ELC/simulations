@@ -38,9 +38,11 @@ class PreferentialAttachmentConfig(AggregationConfig):
 
 def _validate(params: AdvancedParams) -> None:
     if params.initial_clique > params.n_nodes:
-        raise ValueError("initial_clique must be <= n_nodes.")
+        msg = "initial_clique must be <= n_nodes."
+        raise ValueError(msg)
     if params.m_attach >= params.initial_clique:
-        raise ValueError("m_attach must be strictly less than initial_clique.")
+        msg = "m_attach must be strictly less than initial_clique."
+        raise ValueError(msg)
 
 
 def _grow_graph(params: AdvancedParams, rng: np.random.Generator) -> NDArray[np.float64]:
