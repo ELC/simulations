@@ -11,8 +11,7 @@ from pandera.typing import DataFrame
 from pydantic import BaseModel, ConfigDict
 
 from stlite_hello.analysis import RunBundle
-
-from ..model import AdvancedParams, savings_per_agent
+from stlite_hello.features.kinetic_exchange.model import AdvancedParams, savings_per_agent
 
 _DEFAULT_HEIGHT = 320
 
@@ -88,7 +87,13 @@ def build_savings_wealth_chart(
     data: DataFrame[SavingsWealthData],
     heading: SavingsWealthHeading,
 ) -> alt.TopLevelMixin:
-    """Scatter of agents in (savings, wealth) space with a rolling-mean line."""
+    """Scatter of agents in (savings, wealth) space with a rolling-mean line.
+
+    Returns
+    -------
+    alt.TopLevelMixin
+        Layered Altair chart.
+    """
     base = alt.Chart(data).encode(
         x=alt.X("savings_rate:Q", title=heading.x_label),
         y=alt.Y("final_wealth:Q", title=heading.y_label),

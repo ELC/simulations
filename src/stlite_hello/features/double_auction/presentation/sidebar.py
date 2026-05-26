@@ -1,4 +1,4 @@
-"""Sidebar: turn user input into a frozen :class:`KineticExchangeConfig`."""
+"""Sidebar: turn user input into a frozen :class:`DoubleAuctionConfig`."""
 
 from typing import Literal
 
@@ -6,7 +6,6 @@ import streamlit as st
 from pydantic import BaseModel, ConfigDict
 
 from stlite_hello.analysis import AggregationConfig
-from stlite_hello.features.kinetic_exchange.model import AdvancedParams, KineticExchangeConfig, SimpleParams
 from stlite_hello.presentation import (
     AdvancedToggleLabels,
     AggregationSidebarInputs,
@@ -14,9 +13,10 @@ from stlite_hello.presentation import (
     build_aggregation_config,
 )
 
-from .view_models import KINETIC_COPY
+from ..model import AdvancedParams, DoubleAuctionConfig, SimpleParams
+from .view_models import DOUBLE_AUCTION_COPY
 
-_KEY_PREFIX = "kinetic_exchange"
+_KEY_PREFIX = "double_auction"
 
 
 class _SidebarParams(BaseModel):
@@ -27,60 +27,60 @@ class _SidebarParams(BaseModel):
 
 
 def _render_simple_form(defaults: SimpleParams) -> AdvancedParams:
-    n_agents = st.slider(
-        "Number of agents",
-        min_value=10,
-        max_value=2_000,
-        value=defaults.n_agents,
-        step=10,
-        key=f"{_KEY_PREFIX}_simple_agents",
+    n_traders = st.slider(
+        "Number of traders",
+        min_value=4,
+        max_value=1_000,
+        value=defaults.n_traders,
+        step=2,
+        key=f"{_KEY_PREFIX}_simple_traders",
     )
     n_steps = st.slider(
-        "Steps per replicate",
+        "Auction rounds",
         min_value=10,
-        max_value=5_000,
+        max_value=2_000,
         value=defaults.n_steps,
         step=10,
         key=f"{_KEY_PREFIX}_simple_steps",
     )
-    lambda_mean = st.slider(
-        "Mean savings propensity λ",
-        min_value=0.0,
-        max_value=1.0,
-        value=defaults.lambda_mean,
-        step=0.01,
-        key=f"{_KEY_PREFIX}_simple_lambda_mean",
+    value_ceiling = st.number_input(
+        "Maximum private value",
+        min_value=1.0,
+        value=defaults.value_ceiling,
+        step=1.0,
+        key=f"{_KEY_PREFIX}_simple_ceiling",
     )
     return AdvancedParams(
-        n_agents=int(n_agents),
+        n_traders=int(n_traders),
         n_steps=int(n_steps),
-        lambda_mean=float(lambda_mean),
+        value_ceiling=float(value_ceiling),
     )
 
 
 def _render_advanced_form(defaults: AdvancedParams) -> AdvancedParams:
     simple = _render_simple_form(defaults)
-    lambda_spread = st.slider(
-        "Savings dispersion (half-width)",
+    shading = st.slider(
+        "Strategic shading (0 = truthful)",
         min_value=0.0,
-        max_value=1.0,
-        value=defaults.lambda_spread,
+        max_value=0.9,
+        value=defaults.shading,
         step=0.01,
-        key=f"{_KEY_PREFIX}_advanced_spread",
+        key=f"{_KEY_PREFIX}_advanced_shading",
     )
-    initial_wealth = st.number_input(
-        "Initial wealth per agent",
-        min_value=0.01,
-        value=defaults.initial_wealth,
-        step=1.0,
-        key=f"{_KEY_PREFIX}_advanced_wealth",
+    buyer_share = st.slider(
+        "Fraction of buyers",
+        min_value=0.05,
+        max_value=0.95,
+        value=defaults.buyer_share,
+        step=0.01,
+        key=f"{_KEY_PREFIX}_advanced_buyer_share",
     )
     return AdvancedParams(
-        n_agents=simple.n_agents,
+        n_traders=simple.n_traders,
         n_steps=simple.n_steps,
-        lambda_mean=simple.lambda_mean,
-        lambda_spread=float(lambda_spread),
-        initial_wealth=float(initial_wealth),
+        value_ceiling=simple.value_ceiling,
+        shading=float(shading),
+        buyer_share=float(buyer_share),
     )
 
 
@@ -109,9 +109,9 @@ def _render_params(defaults: AdvancedParams, labels: AdvancedToggleLabels) -> _S
             view: Literal["simple", "advanced"] = "advanced"
         else:
             simple_defaults = SimpleParams(
-                n_agents=defaults.n_agents,
+                n_traders=defaults.n_traders,
                 n_steps=defaults.n_steps,
-                lambda_mean=defaults.lambda_mean,
+                value_ceiling=defaults.value_ceiling,
             )
             params = _render_simple_form(simple_defaults)
             view = "simple"
@@ -121,20 +121,20 @@ def _render_params(defaults: AdvancedParams, labels: AdvancedToggleLabels) -> _S
 class SidebarInputs(BaseModel):
     model_config = ConfigDict(frozen=True)
 
-    defaults: KineticExchangeConfig
+    defaults: DoubleAuctionConfig
 
 
-def build_config(inputs: SidebarInputs) -> KineticExchangeConfig:
-    """Render the sidebar and return a frozen :class:`KineticExchangeConfig`.
+def build_config(inputs: SidebarInputs) -> DoubleAuctionConfig:
+    """Render the sidebar and return a frozen :class:`DoubleAuctionConfig`.
 
     Returns
     -------
-    KineticExchangeConfig
+    DoubleAuctionConfig
         Fully validated, no primitives in the public signature.
     """
     defaults = inputs.defaults
-    sidebar_params = _render_params(defaults.params, KINETIC_COPY.view_toggle)
-    seed = _render_seed(KINETIC_COPY.seed, defaults.seed)
+    sidebar_params = _render_params(defaults.params, DOUBLE_AUCTION_COPY.view_toggle)
+    seed = _render_seed(DOUBLE_AUCTION_COPY.seed, defaults.seed)
     aggregation = build_aggregation_config(
         AggregationSidebarInputs(
             defaults=AggregationConfig(
@@ -145,11 +145,11 @@ def build_config(inputs: SidebarInputs) -> KineticExchangeConfig:
                 confidence_level=defaults.confidence_level,
                 bootstrap_method=defaults.bootstrap_method,
             ),
-            labels=KINETIC_COPY.sidebar,
+            labels=DOUBLE_AUCTION_COPY.sidebar,
             key_prefix=_KEY_PREFIX,
         ),
     )
-    return KineticExchangeConfig(
+    return DoubleAuctionConfig(
         runs=aggregation.runs,
         seed=aggregation.seed,
         trajectory_step_samples=aggregation.trajectory_step_samples,

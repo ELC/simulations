@@ -8,16 +8,16 @@ from stlite_hello.analysis import (
     run_replicates,
     summarize,
 )
-from stlite_hello.features.kinetic_exchange.model import KINETIC_FEATURE, KineticExchangeConfig, simulate_once
 from stlite_hello.presentation import DownloadInputs
 
+from ..model import DOUBLE_AUCTION_FEATURE, DoubleAuctionConfig, simulate_once
 from . import sections
 from .sidebar import SidebarInputs, build_config
 from .special_chart import SpecialChartInputs, render_special_chart
-from .view_models import KINETIC_COPY, KINETIC_SPECIAL_HEADING
+from .view_models import DOUBLE_AUCTION_COPY, DOUBLE_AUCTION_SPECIAL_HEADING
 
 
-def _run(config: KineticExchangeConfig) -> RunBundle:
+def _run(config: DoubleAuctionConfig) -> RunBundle:
     return run_replicates(
         simulate_once=simulate_once,
         params=config.params,
@@ -25,15 +25,15 @@ def _run(config: KineticExchangeConfig) -> RunBundle:
     )
 
 
-def _summarize(*, config: KineticExchangeConfig, bundle: RunBundle) -> SimulationReport:
+def _summarize(*, config: DoubleAuctionConfig, bundle: RunBundle) -> SimulationReport:
     return summarize(bundle=bundle, config=config)
 
 
 def render() -> None:
-    """Render the Kinetic Exchange page end-to-end."""
-    copy = KINETIC_COPY
+    """Render the Double Auction page end-to-end."""
+    copy = DOUBLE_AUCTION_COPY
     sections.render_page_header(copy.page_header)
-    defaults = KineticExchangeConfig()
+    defaults = DoubleAuctionConfig()
     config = build_config(SidebarInputs(defaults=defaults))
     with st.spinner(f"Running {config.runs} replicates..."):
         bundle = _run(config)
@@ -51,16 +51,14 @@ def render() -> None:
     st.subheader(copy.special_chart_title)
     render_special_chart(
         SpecialChartInputs(
-            bundle=bundle,
             params=config.params,
             seed=config.seed,
-            runs=config.runs,
-            heading=KINETIC_SPECIAL_HEADING,
+            heading=DOUBLE_AUCTION_SPECIAL_HEADING,
         ),
     )
     sections.render_download(
         DownloadInputs(
-            feature=KINETIC_FEATURE,
+            feature=DOUBLE_AUCTION_FEATURE,
             config=config,
             params=config.params,
             bundle=bundle,

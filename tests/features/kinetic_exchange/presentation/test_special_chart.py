@@ -7,6 +7,8 @@ from stlite_hello.features.kinetic_exchange import (
     build_savings_wealth_panel,
 )
 
+_EXPECTED_LAYERS = 2
+
 _HEADING = SavingsWealthHeading(
     title="Savings vs wealth",
     x_label="lambda",
@@ -49,4 +51,4 @@ def test_build_savings_wealth_chart_titles_and_axes(
     spec = chart.to_dict()
 
     assert spec["title"] == _HEADING.title
-    assert len(spec["layer"]) == 2
+    assert len(spec["layer"]) == _EXPECTED_LAYERS
