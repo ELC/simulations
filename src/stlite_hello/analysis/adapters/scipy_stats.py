@@ -21,6 +21,8 @@ DistributionName = Literal[
     "weibull_min",
 ]
 
+_MINIMUM_KDE_SAMPLES = 2
+
 
 class _ScipyDistribution(Protocol):
     """Structural type for the scipy distribution objects we touch."""
@@ -36,6 +38,20 @@ class _ScipyDistribution(Protocol):
     ) -> NDArray[np.float64]: ...
 
 
+BootstrapMethod = Literal["BCa", "percentile", "basic"]
+
+
+class BootstrapSettings(BaseModel):
+    """Tunables shared across every ``bootstrap_ci`` call."""
+
+    model_config = ConfigDict(frozen=True)
+
+    n_resamples: int = Field(ge=10)
+    confidence_level: float = Field(gt=0.0, lt=1.0)
+    method: BootstrapMethod = "BCa"
+    seed: int
+
+
 class BootstrapCIResult(BaseModel):
     model_config = ConfigDict(frozen=True)
 
@@ -43,7 +59,7 @@ class BootstrapCIResult(BaseModel):
     ci_low: float
     ci_high: float
     confidence_level: float = Field(gt=0.0, lt=1.0)
-    method: Literal["BCa", "percentile", "basic"]
+    method: BootstrapMethod
     standard_error: float = Field(ge=0.0)
 
 
@@ -80,25 +96,25 @@ def bootstrap_ci(
     samples: NDArray[np.float64],
     statistic: Callable[[NDArray[np.float64]], float],
     *,
-    n_resamples: int,
-    confidence_level: float,
-    method: Literal["BCa", "percentile", "basic"] = "BCa",
-    seed: int,
+    settings: BootstrapSettings,
 ) -> BootstrapCIResult:
     """Bootstrap CI for ``statistic(samples)`` using ``scipy.stats.bootstrap``.
 
-    The estimate is the statistic evaluated on the original sample; the CI is
-    derived from ``n_resamples`` bootstrap replicates with the given method.
-    The ``seed`` makes the resampling deterministic.
+    Returns
+    -------
+    BootstrapCIResult
+        ``estimate`` is the statistic on the original sample; the
+        ``[ci_low, ci_high]`` interval is the bootstrap interval at
+        ``settings.confidence_level``.
     """
-    random_state = np.random.default_rng(seed)
+    random_state = np.random.default_rng(settings.seed)
     estimate = float(statistic(samples))
     result = _stats.bootstrap(
         (samples,),
         cast("Callable[..., float]", statistic),
-        n_resamples=n_resamples,
-        confidence_level=confidence_level,
-        method=method,
+        n_resamples=settings.n_resamples,
+        confidence_level=settings.confidence_level,
+        method=settings.method,
         vectorized=False,
         random_state=random_state,
     )
@@ -107,8 +123,8 @@ def bootstrap_ci(
         estimate=estimate,
         ci_low=float(low),
         ci_high=float(high),
-        confidence_level=confidence_level,
-        method=method,
+        confidence_level=settings.confidence_level,
+        method=settings.method,
         standard_error=float(result.standard_error),
     )
 
@@ -123,8 +139,13 @@ def gaussian_kde_grid(
 
     Bandwidth uses Scott's rule (scipy's default). The grid spans
     ``[min - pad*range, max + pad*range]`` so the tails are visible.
+
+    Returns
+    -------
+    KDESample
+        The grid is in ``x`` and the density values in ``density``.
     """
-    if samples.size < 2:
+    if samples.size < _MINIMUM_KDE_SAMPLES:
         msg = "gaussian_kde_grid requires at least 2 samples"
         raise ValueError(msg)
     estimator = _stats.gaussian_kde(samples)
@@ -132,8 +153,8 @@ def gaussian_kde_grid(
     hi = float(samples.max())
     span = hi - lo
     pad = pad_fraction * span if span > 0 else 1.0
-    grid = np.linspace(lo - pad, hi + pad, grid_size, dtype=np.float64)
-    density = estimator(grid)
+    grid = np.linspace(lo - pad, hi + pad, grid_size).astype(np.float64)
+    density = np.asarray(estimator(grid), dtype=np.float64)
     return KDESample(x=grid, density=density)
 
 
@@ -144,7 +165,11 @@ def fit_distribution(
 ) -> FittedDistribution:
     """Fit ``samples`` to the named distribution via MLE.
 
-    Wraps ``dist.fit`` and computes the log-likelihood for downstream AIC.
+    Returns
+    -------
+    FittedDistribution
+        Carries the MLE parameters and the sample log-likelihood (used
+        downstream for AIC ranking).
     """
     dist = _distribution(name)
     params = tuple(float(p) for p in dist.fit(samples))
@@ -156,7 +181,13 @@ def pdf_values(
     fitted: FittedDistribution,
     grid: NDArray[np.float64],
 ) -> NDArray[np.float64]:
-    """Evaluate the fitted distribution's PDF on the given grid."""
+    """Evaluate the fitted distribution's PDF on ``grid``.
+
+    Returns
+    -------
+    NDArray[np.float64]
+        The PDF evaluated at each point of ``grid``.
+    """
     dist = _distribution(fitted.name)
     return np.asarray(dist.pdf(grid, *fitted.params), dtype=np.float64)
 
@@ -168,7 +199,13 @@ def rvs_distribution(
     size: int,
     seed: int,
 ) -> NDArray[np.float64]:
-    """Draw ``size`` random variates from the named distribution."""
+    """Draw ``size`` random variates from the named distribution.
+
+    Returns
+    -------
+    NDArray[np.float64]
+        ``size`` independent samples drawn from the distribution.
+    """
     dist = _distribution(name)
     rng = np.random.default_rng(seed)
     drawn = dist.rvs(*params, size=size, random_state=rng)

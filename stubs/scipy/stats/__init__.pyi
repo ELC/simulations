@@ -1,8 +1,3 @@
-"""Local stub for :mod:`scipy.stats`.
-
-Covers only the surface used by ``stlite_hello.analysis.adapters``.
-"""
-
 from collections.abc import Callable, Sequence
 from typing import Any, Protocol
 
@@ -73,7 +68,7 @@ class gaussian_kde:  # noqa: N801 — match scipy's class name
     def __init__(
         self,
         dataset: NDArray[np.float64],
-        bw_method: str | float | Callable[["gaussian_kde"], float] | None = ...,
+        bw_method: str | float | Callable[[gaussian_kde], float] | None = ...,
         weights: NDArray[np.float64] | None = ...,
     ) -> None: ...
     def __call__(self, points: NDArray[np.float64]) -> NDArray[np.float64]: ...

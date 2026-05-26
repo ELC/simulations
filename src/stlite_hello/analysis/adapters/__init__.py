@@ -7,6 +7,8 @@ consumes the narrowly-typed wrappers re-exported here.
 
 from .scipy_stats import (
     BootstrapCIResult,
+    BootstrapMethod,
+    BootstrapSettings,
     DistributionName,
     KDESample,
     bootstrap_ci,
@@ -22,6 +24,8 @@ from .statsmodels import (
 
 __all__ = [
     "BootstrapCIResult",
+    "BootstrapMethod",
+    "BootstrapSettings",
     "DistributionName",
     "KDESample",
     "KaplanMeierEstimate",

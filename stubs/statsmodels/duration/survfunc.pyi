@@ -1,8 +1,3 @@
-"""Local stub for :mod:`statsmodels.duration.survfunc`.
-
-Covers only the surface used by ``stlite_hello.analysis.adapters.statsmodels``.
-"""
-
 import numpy as np
 from numpy.typing import NDArray
 

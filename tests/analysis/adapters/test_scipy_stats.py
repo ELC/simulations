@@ -4,6 +4,7 @@ from numpy.typing import NDArray
 
 from stlite_hello.analysis.adapters import (
     BootstrapCIResult,
+    BootstrapSettings,
     KDESample,
     bootstrap_ci,
     fit_distribution,
@@ -13,46 +14,49 @@ from stlite_hello.analysis.adapters import (
 )
 
 
-def test_bootstrap_ci_brackets_mean_of_standard_normal(
-    standard_normal_samples: NDArray[np.float64],
+@pytest.fixture
+def bootstrap_settings(
     bootstrap_resamples: int,
     confidence_level: float,
     bootstrap_seed: int,
-) -> None:
-    result: BootstrapCIResult = bootstrap_ci(
-        standard_normal_samples,
-        statistic=lambda data: float(np.mean(data)),
+) -> BootstrapSettings:
+    return BootstrapSettings(
         n_resamples=bootstrap_resamples,
         confidence_level=confidence_level,
         seed=bootstrap_seed,
     )
 
+
+def test_bootstrap_ci_brackets_mean_of_standard_normal(
+    standard_normal_samples: NDArray[np.float64],
+    bootstrap_settings: BootstrapSettings,
+) -> None:
+    result: BootstrapCIResult = bootstrap_ci(
+        standard_normal_samples,
+        statistic=lambda data: float(np.mean(data)),
+        settings=bootstrap_settings,
+    )
+
     assert result.ci_low < result.estimate < result.ci_high
     assert result.ci_low < 0.0 < result.ci_high
-    assert result.confidence_level == confidence_level
+    assert result.confidence_level == bootstrap_settings.confidence_level
     assert result.method == "BCa"
     assert result.standard_error >= 0.0
 
 
 def test_bootstrap_ci_is_reproducible_under_same_seed(
     standard_normal_samples: NDArray[np.float64],
-    bootstrap_resamples: int,
-    confidence_level: float,
-    bootstrap_seed: int,
+    bootstrap_settings: BootstrapSettings,
 ) -> None:
     first = bootstrap_ci(
         standard_normal_samples,
         statistic=lambda data: float(np.mean(data)),
-        n_resamples=bootstrap_resamples,
-        confidence_level=confidence_level,
-        seed=bootstrap_seed,
+        settings=bootstrap_settings,
     )
     second = bootstrap_ci(
         standard_normal_samples,
         statistic=lambda data: float(np.mean(data)),
-        n_resamples=bootstrap_resamples,
-        confidence_level=confidence_level,
-        seed=bootstrap_seed,
+        settings=bootstrap_settings,
     )
 
     assert first == second
@@ -92,7 +96,7 @@ def test_pdf_values_integrates_to_one(
     exponential_samples: NDArray[np.float64],
 ) -> None:
     fitted = fit_distribution(exponential_samples, name="expon")
-    grid = np.linspace(0.0, 30.0, 4_096)
+    grid = np.linspace(0.0, 30.0, 4_096, dtype=np.float64)
 
     density = pdf_values(fitted, grid)
 

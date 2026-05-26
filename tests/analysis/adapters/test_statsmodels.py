@@ -47,13 +47,16 @@ def test_kaplan_meier_handles_censoring(
     censored_durations: NDArray[np.float64],
     censored_events: NDArray[np.int_],
 ) -> None:
+    expected_observed = int(censored_events.sum())
+    expected_censored = censored_events.size - expected_observed
+
     estimate = kaplan_meier_mean_lifetime(
         durations=censored_durations,
         event_observed=censored_events,
     )
 
-    assert estimate.observed_events == 3
-    assert estimate.censored_events == 2
+    assert estimate.observed_events == expected_observed
+    assert estimate.censored_events == expected_censored
     assert estimate.mean_lifetime > 0.0
 
 
