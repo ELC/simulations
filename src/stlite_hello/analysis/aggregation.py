@@ -50,12 +50,21 @@ contract is enforced by the per-feature signature on ``simulate_once``.
 
 
 class RunBundle(BaseModel):
-    """All N replicate outputs, packed for downstream consumption."""
+    """All N replicate outputs, packed for downstream consumption.
+
+    Holds both the per-replicate numpy panels (cheap to compute on) and the
+    long-form Pandera-validated DataFrames (used by exports and a few
+    feature-specific charts). The numpy view exists so ``summarize`` does
+    not pay the cost of re-pivoting millions of rows back out of the
+    DataFrame on every run.
+    """
 
     model_config = ConfigDict(frozen=True, arbitrary_types_allowed=True)
 
     final_population: DataFrame[FinalPopulation]
     focal_panel: DataFrame[FocalPanel]
+    panels: tuple[NDArray[np.float64], ...]
+    step_indices: tuple[NDArray[np.int_], ...]
 
 
 def _build_final_population(panels: list[NDArray[np.float64]]) -> DataFrame[FinalPopulation]:
@@ -75,25 +84,26 @@ def _build_focal_panel(
     panels: list[NDArray[np.float64]],
     step_indices: list[NDArray[np.int_]],
 ) -> DataFrame[FocalPanel]:
-    pieces: list[pd.DataFrame] = []
+    n_agents = panels[0].shape[1]
+    agent_template = np.arange(n_agents, dtype=np.int64)
+    runs: list[NDArray[np.int64]] = []
+    steps_out: list[NDArray[np.int64]] = []
+    agents_out: list[NDArray[np.int64]] = []
+    values_out: list[NDArray[np.float64]] = []
     for run_index, (panel, steps) in enumerate(zip(panels, step_indices, strict=True)):
-        n_steps, n_agents = panel.shape
-        step_grid, agent_grid = np.meshgrid(
-            np.arange(n_steps, dtype=np.int_),
-            np.arange(n_agents, dtype=np.int_),
-            indexing="ij",
-        )
-        pieces.append(
-            pd.DataFrame(
-                {
-                    "run": np.full(panel.size, run_index, dtype=np.int64),
-                    "step": steps[step_grid].astype(np.int64).ravel(),
-                    "agent": agent_grid.astype(np.int64).ravel(),
-                    "value": panel.astype(np.float64).ravel(),
-                },
-            ),
-        )
-    frame = pd.concat(pieces, ignore_index=True)
+        n_steps = panel.shape[0]
+        runs.append(np.full(panel.size, run_index, dtype=np.int64))
+        steps_out.append(np.repeat(steps.astype(np.int64), n_agents))
+        agents_out.append(np.tile(agent_template, n_steps))
+        values_out.append(panel.astype(np.float64, copy=False).ravel())
+    frame = pd.DataFrame(
+        {
+            "run": np.concatenate(runs),
+            "step": np.concatenate(steps_out),
+            "agent": np.concatenate(agents_out),
+            "value": np.concatenate(values_out),
+        },
+    )
     return DataFrame[FocalPanel](frame)
 
 
@@ -134,6 +144,8 @@ def run_replicates(
     return RunBundle(
         final_population=_build_final_population(panels),
         focal_panel=_build_focal_panel(panels, step_indices),
+        panels=tuple(panels),
+        step_indices=tuple(step_indices),
     )
 
 

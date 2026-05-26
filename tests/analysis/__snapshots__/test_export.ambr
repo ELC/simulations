@@ -20,7 +20,7 @@
             'type': 'string',
           }),
           'bootstrap_resamples': dict({
-            'default': 2000,
+            'default': 500,
             'maximum': 20000,
             'minimum': 200,
             'title': 'Bootstrap Resamples',
@@ -45,7 +45,7 @@
             'type': 'integer',
           }),
           'trajectory_step_samples': dict({
-            'default': 50,
+            'default': 15,
             'maximum': 500,
             'minimum': 2,
             'title': 'Trajectory Step Samples',

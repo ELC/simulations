@@ -13,13 +13,7 @@ def stlite_main_app() -> AppTest:
 
 
 def test_main_app_renders_without_exception(stlite_main_app: AppTest) -> None:
-    stlite_main_app.session_state["yard_sale_runs"] = 2
-    stlite_main_app.session_state["yard_sale_trajectory_samples"] = 4
-    stlite_main_app.session_state["yard_sale_resamples"] = 200
-    stlite_main_app.session_state["yard_sale_simple_agents"] = 12
-    stlite_main_app.session_state["yard_sale_simple_steps"] = 20
-
-    stlite_main_app.run(timeout=120)
+    stlite_main_app.run(timeout=10)
 
     assert not stlite_main_app.exception
 

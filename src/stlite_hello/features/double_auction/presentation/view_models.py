@@ -2,6 +2,7 @@
 
 from stlite_hello.analysis import ChartHeading, DecileHeatmapHeading, KdeFitsHeading
 from stlite_hello.presentation import (
+    DEFAULT_RUN_CONTROL_LABELS,
     AdvancedToggleLabels,
     AggregationSidebarLabels,
     CommonChartHeadings,
@@ -85,6 +86,7 @@ DOUBLE_AUCTION_COPY = FeatureCopy(
         label="Double Auction seed",
         help="Deterministic seed for this simulation only.",
     ),
+    run_control=DEFAULT_RUN_CONTROL_LABELS,
     special_chart_title="Marshallian supply-demand cross (final round)",
 )
 

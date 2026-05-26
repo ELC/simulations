@@ -8,7 +8,6 @@ from pandera.typing import DataFrame
 from pydantic import BaseModel, ConfigDict
 
 from stlite_hello.analysis import (
-    AggregationConfig,
     ChartHeading,
     DecileHeatmapHeading,
     DecileTransition,
@@ -19,15 +18,11 @@ from stlite_hello.analysis import (
     LorenzCurve,
     MetricCI,
     MetricCIOverTime,
-    RunBundle,
-    SimulationReport,
     build_aic_ranking,
     build_decile_transitions,
     build_kde_with_fits,
     build_lorenz,
     build_metric_trajectories,
-    export_filename,
-    serialize_run,
 )
 
 
@@ -112,46 +107,13 @@ def render_decile_transitions(
     _show(build_decile_transitions(transitions, heading))
 
 
-class DownloadInputs(BaseModel):
-    """Bundle of typed inputs for :func:`render_download` (avoids primitives)."""
-
-    model_config = ConfigDict(frozen=True, arbitrary_types_allowed=True)
-
-    feature: str
-    config: AggregationConfig
-    params: BaseModel
-    bundle: RunBundle
-    report: SimulationReport
-    heading: DownloadHeading
-
-
-def render_download(inputs: DownloadInputs) -> None:
-    payload = serialize_run(
-        feature=inputs.feature,
-        config=inputs.config,
-        params=inputs.params,
-        bundle=inputs.bundle,
-        report=inputs.report,
-    )
-    file_name = export_filename(feature=inputs.feature, config=inputs.config)
-    st.download_button(
-        label=inputs.heading.label,
-        data=payload,
-        file_name=file_name,
-        mime=inputs.heading.mime,
-        help=inputs.heading.help,
-    )
-
-
 __all__ = [
     "DownloadHeading",
-    "DownloadInputs",
     "ExampleCallout",
     "MetricsTableHeading",
     "PageHeader",
     "render_aic_ranking",
     "render_decile_transitions",
-    "render_download",
     "render_example_callout",
     "render_kde_and_fits",
     "render_lorenz",

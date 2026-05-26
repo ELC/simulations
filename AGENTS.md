@@ -341,8 +341,10 @@ A slice **must** ship:
 2. **`presentation/`** subpackage with one file per concern:
    - `view_models.py` — frozen `FeatureCopy` (with `PageHeader`,
      `ExampleCallout`, `CommonChartHeadings`, sidebar/seed/toggle labels,
-     `DownloadHeading`, `special_chart_title`) plus the slice-specific
-     `*Heading` for the special chart. **All UI text lives here.**
+     `DownloadHeading`, `run_control` — typically
+     `DEFAULT_RUN_CONTROL_LABELS`, `special_chart_title`) plus the
+     slice-specific `*Heading` for the special chart. **All UI text
+     lives here.**
    - `sidebar.py` exposing `SidebarInputs` and `build_config(...)`. The
      public surface must take a `SidebarInputs(defaults=<Slice>Config)`
      and return the same frozen config type — never raw primitives.
@@ -356,10 +358,25 @@ A slice **must** ship:
      - Pure `build_*_chart(...)` returning `alt.TopLevelMixin`,
      - `render_special_chart(inputs: SpecialChartInputs)` that calls
        `st.altair_chart` with `width="stretch"` (cast to `alt.Chart`).
-   - `controller.py` orchestrating sidebar → `run_replicates` → `summarize`
-     → section renderers → special chart → `render_download`. Must not
-     contain any free-floating literal strings — pull them from the
-     `FeatureCopy` view model.
+   - `controller.py` orchestrating page header → `render_example_callout`
+     (real-world analogue, **must be rendered before the run toolbar**) →
+     sidebar → `render_run_control` → section renderers → special chart.
+     The controller **must** gate every analysis call behind
+     `render_run_control(RunControlInputs(..., download=copy.download))`;
+     the simulation only runs when the user clicks the **Run simulation**
+     button. The run-control helper renders a side-by-side toolbar with
+     the **Run simulation** primary button and the JSON **Download**
+     button (disabled until a run completes), so controllers must **not**
+     call `render_download` themselves — passing `download=copy.download`
+     into `RunControlInputs` is the only download wiring needed. If
+     `render_run_control` returns `None`, the controller returns
+     immediately (the helper renders the idle prompt and the disabled
+     download). When the controller needs the slice's typed
+     `AdvancedParams` (e.g. for the special chart), import it under
+     `if TYPE_CHECKING:` and use `cast("AdvancedParams", outcome.params)`
+     so pyright/mypy stay strict while pylint sees the import as
+     type-only. Must not contain any free-floating literal strings — pull
+     them from the `FeatureCopy` view model.
 
 3. **`page.py`** that exposes `pages() -> list[StreamlitPage]` with a
    single `st.Page(render, ...)`. **No analysis or UI logic** beyond the
@@ -391,10 +408,22 @@ tests/features/<slice>/
     test_special_chart.py                      # frame schema + chart layer count/title
 ```
 
-`test_main.py` and `test_sidebar.py` **must** pre-populate `st.session_state`
-with small `<slice>_simple_*`, `<slice>_runs`, `<slice>_resamples`,
-`<slice>_trajectory_samples` and (for sidebar tests) `<slice>_advanced_*`
-keys to keep `AppTest.run(timeout=...)` under the timeout budget.
+`test_main.py` is split into two cases per slice:
+
+1. A short *idle* assertion (`test_<slice>_main_renders_without_exception`)
+   that calls `AppTest.run(timeout=10)` without any session-state setup
+   and asserts the page rendered the idle prompt without exception. This
+   guards the gated-run behaviour: opening a page **must not** trigger a
+   simulation.
+2. A *run-button* assertion that pre-populates `<slice>_simple_*`,
+   `<slice>_runs`, `<slice>_resamples`, `<slice>_trajectory_samples`,
+   then runs the script once, clicks the run button via
+   `test.button(key="run_outcome::<slice>::button").click()`, and runs
+   again with `timeout=120`. This exercises the full controller → run →
+   render path and is what keeps coverage at 100%.
+
+`test_sidebar.py` similarly pre-populates the same keys so the sidebar
+test stays under the timeout budget.
 
 Only one slice (`yard_sale`) keeps a syrupy snapshot of the export schema;
 the rest only assert byte-identical round-trips, because the shared schema
@@ -450,4 +479,4 @@ matching skill in the same change.
 
 ---
 
-_Last reviewed: 2026-05-26 (Python 3.13) — seven free-market simulation slices in place; shared `analysis/` + `presentation/` packages; syrupy snapshots for export schema and yard-sale headline metrics._
+_Last reviewed: 2026-05-26 (Python 3.13) — seven free-market simulation slices in place; gated runs via shared `render_run_control` (Run + disabled-until-ready Download toolbar) + numpy `RunBundle.panels` view to keep summarize fast; real-world analogue rendered above the run toolbar._

@@ -3,7 +3,6 @@
 from stlite_hello.presentation import (
     render_aic_ranking,
     render_decile_transitions,
-    render_download,
     render_example_callout,
     render_kde_and_fits,
     render_lorenz,
@@ -15,7 +14,6 @@ from stlite_hello.presentation import (
 __all__ = [
     "render_aic_ranking",
     "render_decile_transitions",
-    "render_download",
     "render_example_callout",
     "render_kde_and_fits",
     "render_lorenz",

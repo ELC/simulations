@@ -80,27 +80,12 @@ class SimulationReport(BaseModel):
     top_pct_spells: DataFrame[TopPctSpell]
 
 
-def _panel_for_run(bundle: RunBundle, *, run: int) -> NDArray[np.float64]:
-    rows = bundle.focal_panel[bundle.focal_panel["run"] == run]
-    steps = sorted(rows["step"].unique())
-    n_agents = int(rows["agent"].max() + 1)
-    panel = np.zeros((len(steps), n_agents), dtype=np.float64)
-    step_to_index = {int(step): idx for idx, step in enumerate(steps)}
-    for _, row in rows.iterrows():
-        panel[step_to_index[int(row["step"])], int(row["agent"])] = float(row["value"])
-    return panel
-
-
 def _final_per_run(bundle: RunBundle) -> list[NDArray[np.float64]]:
-    final = bundle.final_population
-    return [
-        final[final["run"] == run].sort_values("agent")["value"].to_numpy(dtype=np.float64)
-        for run in sorted(final["run"].unique())
-    ]
+    return [panel[-1, :].astype(np.float64, copy=False) for panel in bundle.panels]
 
 
 def _panels_per_run(bundle: RunBundle) -> list[NDArray[np.float64]]:
-    return [_panel_for_run(bundle, run=int(run)) for run in sorted(bundle.focal_panel["run"].unique())]
+    return list(bundle.panels)
 
 
 def _bootstrap_mean(
@@ -294,14 +279,6 @@ def _mobility_trajectory_rows(
     ]
 
 
-def _empty_metrics_over_time() -> DataFrame[MetricCIOverTime]:
-    return DataFrame[MetricCIOverTime](
-        pd.DataFrame(
-            {"metric": [], "step": [], "estimate": [], "ci_low": [], "ci_high": [], "family": []},
-        ).astype({"step": "int64", "estimate": "float64", "ci_low": "float64", "ci_high": "float64"}),
-    )
-
-
 def _concentration_statistics() -> dict[str, _Statistic]:
     return {
         "gini": gini,
@@ -317,8 +294,6 @@ def _build_metrics_ci_over_time(
     panels_per_run: list[NDArray[np.float64]],
     config: AggregationConfig,
 ) -> DataFrame[MetricCIOverTime]:
-    if not panels_per_run:
-        return _empty_metrics_over_time()
     snapshot_steps = _snapshot_steps(panels_per_run, samples=config.trajectory_step_samples)
     rows: list[dict[str, str | int | float]] = []
     seed_offset = 0
@@ -437,20 +412,11 @@ def _build_kde(pooled: NDArray[np.float64]) -> DataFrame[KDECurve]:
 
 
 def _build_decile_transitions(panels: list[NDArray[np.float64]]) -> DataFrame[DecileTransition]:
-    if not panels:
-        empty = pd.DataFrame(
-            {
-                "from_decile": np.repeat(np.arange(1, 11, dtype=np.int64), 10),
-                "to_decile": np.tile(np.arange(1, 11, dtype=np.int64), 10),
-                "probability": np.zeros(100, dtype=np.float64),
-            },
-        )
-        return DataFrame[DecileTransition](empty)
     aggregated = np.zeros((10, 10), dtype=np.float64)
     for panel in panels:
         per_run = decile_transition_matrix(panel)
-        for _, row in per_run.iterrows():
-            aggregated[int(row["from_decile"]) - 1, int(row["to_decile"]) - 1] += float(row["probability"])
+        matrix = per_run["probability"].to_numpy(dtype=np.float64).reshape(10, 10)
+        aggregated += matrix
     aggregated /= max(1, len(panels))
     from_grid, to_grid = np.meshgrid(
         np.arange(1, 11, dtype=np.int64),
@@ -469,17 +435,6 @@ def _build_decile_transitions(panels: list[NDArray[np.float64]]) -> DataFrame[De
 
 def _build_pooled_spells(panels: list[NDArray[np.float64]]) -> DataFrame[TopPctSpell]:
     pieces = [top_pct_spells(panel, run_index=run_idx) for run_idx, panel in enumerate(panels)]
-    if not pieces:
-        empty = pd.DataFrame(
-            {
-                "run": pd.Series([], dtype="int64"),
-                "agent": pd.Series([], dtype="int64"),
-                "spell": pd.Series([], dtype="int64"),
-                "duration": pd.Series([], dtype="int64"),
-                "censored": pd.Series([], dtype="bool"),
-            },
-        )
-        return DataFrame[TopPctSpell](empty)
     return DataFrame[TopPctSpell](pd.concat(pieces, ignore_index=True))
 
 

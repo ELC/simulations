@@ -15,8 +15,8 @@ class AggregationConfig(BaseModel):
 
     runs: int = Field(default=30, ge=1, le=500)
     seed: int = Field(default=...)
-    trajectory_step_samples: int = Field(default=50, ge=2, le=500)
-    bootstrap_resamples: int = Field(default=2_000, ge=200, le=20_000)
+    trajectory_step_samples: int = Field(default=15, ge=2, le=500)
+    bootstrap_resamples: int = Field(default=500, ge=200, le=20_000)
     confidence_level: float = Field(default=0.95, gt=0.0, lt=1.0)
     bootstrap_method: Literal["BCa", "percentile", "basic"] = "BCa"
 

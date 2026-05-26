@@ -2,6 +2,7 @@
 
 from stlite_hello.analysis import ChartHeading, DecileHeatmapHeading, KdeFitsHeading
 from stlite_hello.presentation import (
+    DEFAULT_RUN_CONTROL_LABELS,
     AdvancedToggleLabels,
     AggregationSidebarLabels,
     CommonChartHeadings,
@@ -86,6 +87,7 @@ PREFERENTIAL_ATTACHMENT_COPY = FeatureCopy(
         label="Preferential-attachment seed",
         help="Deterministic seed for this simulation only.",
     ),
+    run_control=DEFAULT_RUN_CONTROL_LABELS,
     special_chart_title="Zipf log-log degree-rank plot",
 )
 

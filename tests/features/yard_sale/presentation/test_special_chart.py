@@ -16,7 +16,7 @@ _HEADING = WealthCondensationHeading(
 def test_aggregate_wealth_condensation_emits_long_form_per_step_rank(
     yard_sale_fast_bundle: RunBundle,
 ) -> None:
-    aggregated = aggregate_wealth_condensation(yard_sale_fast_bundle.focal_panel)
+    aggregated = aggregate_wealth_condensation(yard_sale_fast_bundle)
 
     assert {"step", "rank", "wealth_share"} <= set(aggregated.columns)
     assert aggregated["rank"].between(1, 40).all()
@@ -26,7 +26,7 @@ def test_aggregate_wealth_condensation_emits_long_form_per_step_rank(
 def test_build_wealth_condensation_chart_uses_heatmap_marks(
     yard_sale_fast_bundle: RunBundle,
 ) -> None:
-    aggregated = aggregate_wealth_condensation(yard_sale_fast_bundle.focal_panel)
+    aggregated = aggregate_wealth_condensation(yard_sale_fast_bundle)
     chart = build_wealth_condensation_chart(aggregated, _HEADING)
 
     spec = chart.to_dict()

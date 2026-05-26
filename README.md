@@ -25,6 +25,11 @@ quintile staircase rate, decile turnover, bottom-to-top rise count, Shorrocks
 index) and run on a configurable number of independently-seeded replicates
 (default 30).
 
+Every page is **gated by a "Run simulation" button** — opening a page only
+renders the controls, never auto-starts the model. Once a run finishes the
+elapsed wall-clock time is shown above the results, and the cached outcome
+survives unrelated sidebar tweaks so re-renders are instant.
+
 ## Stack
 
 - **Stlite / Pyodide 0.29.3** for in-browser execution.

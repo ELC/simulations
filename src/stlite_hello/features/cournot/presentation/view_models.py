@@ -2,6 +2,7 @@
 
 from stlite_hello.analysis import ChartHeading, DecileHeatmapHeading, KdeFitsHeading
 from stlite_hello.presentation import (
+    DEFAULT_RUN_CONTROL_LABELS,
     AdvancedToggleLabels,
     AggregationSidebarLabels,
     CommonChartHeadings,
@@ -85,6 +86,7 @@ COURNOT_COPY = FeatureCopy(
         label="Cournot seed",
         help="Deterministic seed for this simulation only.",
     ),
+    run_control=DEFAULT_RUN_CONTROL_LABELS,
     special_chart_title="Best-response trajectory in (q1, q2) space",
 )
 

@@ -40,7 +40,7 @@ todos:
     status: pending
   - id: docs_and_ci
     content: Rewrite `README.md`, update `AGENTS.md` with the simulation feature contract (Simple/Advanced view convention, per-feature seed rule, Pandera-typed dataframes), confirm `uv run poe ci` passes (lint + 100% coverage + site build).
-    status: pending
+    status: completed
 isProject: false
 ---
 

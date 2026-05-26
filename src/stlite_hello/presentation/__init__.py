@@ -4,15 +4,19 @@ Every per-feature ``presentation/`` package consumes these helpers so the
 seven simulation slices stay 1:1 in behaviour and minimal in glue.
 """
 
+from .runner import (
+    RunControlInputs,
+    RunControlLabels,
+    SimulationOutcome,
+    render_run_control,
+)
 from .sections import (
     DownloadHeading,
-    DownloadInputs,
     ExampleCallout,
     MetricsTableHeading,
     PageHeader,
     render_aic_ranking,
     render_decile_transitions,
-    render_download,
     render_example_callout,
     render_kde_and_fits,
     render_lorenz,
@@ -26,6 +30,7 @@ from .sidebar import (
     build_aggregation_config,
 )
 from .view_models import (
+    DEFAULT_RUN_CONTROL_LABELS,
     AdvancedToggleLabels,
     CommonChartHeadings,
     FeatureCopy,
@@ -33,25 +38,28 @@ from .view_models import (
 )
 
 __all__ = [
+    "DEFAULT_RUN_CONTROL_LABELS",
     "AdvancedToggleLabels",
     "AggregationSidebarInputs",
     "AggregationSidebarLabels",
     "CommonChartHeadings",
     "DownloadHeading",
-    "DownloadInputs",
     "ExampleCallout",
     "FeatureCopy",
     "MetricsTableHeading",
     "PageHeader",
+    "RunControlInputs",
+    "RunControlLabels",
     "SeedSliderLabels",
+    "SimulationOutcome",
     "build_aggregation_config",
     "render_aic_ranking",
     "render_decile_transitions",
-    "render_download",
     "render_example_callout",
     "render_kde_and_fits",
     "render_lorenz",
     "render_metric_trajectories",
     "render_metrics_table",
     "render_page_header",
+    "render_run_control",
 ]

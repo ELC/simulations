@@ -9,7 +9,9 @@ back to the same :class:`SimulationRunExport`, and a second
 from datetime import UTC, datetime, timedelta
 from typing import Any, Literal
 
+import numpy as np
 import pandas as pd
+from numpy.typing import NDArray
 from pandera.typing import DataFrame
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -30,6 +32,24 @@ from .schemas import (
 from .summarize import SimulationReport
 
 _EXPORT_EPOCH = datetime(2026, 1, 1, tzinfo=UTC)
+
+
+def _panels_from_focal_frame(
+    frame: pd.DataFrame,
+) -> tuple[tuple[NDArray[np.float64], ...], tuple[NDArray[np.int_], ...]]:
+    panels: list[NDArray[np.float64]] = []
+    step_indices: list[NDArray[np.int_]] = []
+    for run_id in sorted(frame["run"].unique()):
+        run_frame = frame[frame["run"] == run_id]
+        pivot = run_frame.pivot_table(
+            index="step",
+            columns="agent",
+            values="value",
+            aggfunc="first",
+        ).sort_index()
+        panels.append(pivot.to_numpy(dtype=np.float64))
+        step_indices.append(pivot.index.to_numpy(dtype=np.int_))
+    return tuple(panels), tuple(step_indices)
 
 
 class SerializedBundle(BaseModel):
@@ -76,11 +96,16 @@ class SimulationRunExport(BaseModel):
         -------
         RunBundle
             Pandera-validated bundle with the original ``final_population``
-            and ``focal_panel`` frames.
+            and ``focal_panel`` frames plus the numpy panels rebuilt by
+            pivoting the focal panel back into per-replicate matrices.
         """
+        focal_frame = pd.DataFrame(self.bundle.focal_panel)
+        panels, step_indices = _panels_from_focal_frame(focal_frame)
         return RunBundle(
             final_population=DataFrame[FinalPopulation](pd.DataFrame(self.bundle.final_population)),
-            focal_panel=DataFrame[FocalPanel](pd.DataFrame(self.bundle.focal_panel)),
+            focal_panel=DataFrame[FocalPanel](focal_frame),
+            panels=panels,
+            step_indices=step_indices,
         )
 
     def to_simulation_report(self) -> SimulationReport:

@@ -52,7 +52,7 @@
       'metric': 'bottom_to_top_rise_count',
     }),
     dict({
-      'estimate': 12.25,
+      'estimate': 13.25,
       'family': 'mobility',
       'metric': 'median_time_to_rise',
     }),

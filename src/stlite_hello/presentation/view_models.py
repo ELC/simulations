@@ -4,8 +4,16 @@ from pydantic import BaseModel, ConfigDict
 
 from stlite_hello.analysis import ChartHeading, DecileHeatmapHeading, KdeFitsHeading
 
+from .runner import RunControlLabels
 from .sections import DownloadHeading, ExampleCallout, MetricsTableHeading, PageHeader
 from .sidebar import AggregationSidebarLabels
+
+DEFAULT_RUN_CONTROL_LABELS = RunControlLabels(
+    run_button="Run simulation",
+    idle_message="Adjust parameters in the sidebar, then click *Run simulation* to start.",
+    spinner_template="Running {runs} replicates...",
+    elapsed_template="Last run: {runs} replicates in {elapsed:.2f}s.",
+)
 
 
 class CommonChartHeadings(BaseModel):
@@ -52,10 +60,12 @@ class FeatureCopy(BaseModel):
     sidebar: AggregationSidebarLabels
     view_toggle: AdvancedToggleLabels
     seed: SeedSliderLabels
+    run_control: RunControlLabels
     special_chart_title: str
 
 
 __all__ = [
+    "DEFAULT_RUN_CONTROL_LABELS",
     "AdvancedToggleLabels",
     "CommonChartHeadings",
     "FeatureCopy",

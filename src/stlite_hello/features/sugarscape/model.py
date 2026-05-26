@@ -1,5 +1,7 @@
 """Sugarscape spatial harvest-and-metabolism model."""
 
+from dataclasses import dataclass
+
 import numpy as np
 from numpy.typing import NDArray
 from pydantic import BaseModel, ConfigDict, Field
@@ -9,8 +11,8 @@ from stlite_hello.analysis import AggregationConfig, ReplicateResult
 SUGARSCAPE_DEFAULT_SEED = 1_000_047
 SUGARSCAPE_FEATURE = "sugarscape"
 SUGARSCAPE_DEFAULT_GRID = 20
-SUGARSCAPE_DEFAULT_AGENTS = 100
-SUGARSCAPE_DEFAULT_STEPS = 80
+SUGARSCAPE_DEFAULT_AGENTS = 60
+SUGARSCAPE_DEFAULT_STEPS = 50
 SUGARSCAPE_DEFAULT_VISION = 4
 SUGARSCAPE_DEFAULT_METABOLISM = 1.0
 SUGARSCAPE_DEFAULT_REGROWTH = 1.0
@@ -54,10 +56,9 @@ class SpatialSnapshot(BaseModel):
     agent_wealth: NDArray[np.float64]
 
 
-class _ReplicateState(BaseModel):
+@dataclass(slots=True)
+class _ReplicateState:
     """Mutable replicate state bundled to keep helper arities small."""
-
-    model_config = ConfigDict(arbitrary_types_allowed=True)
 
     sugar: NDArray[np.float64]
     capacity: NDArray[np.float64]
@@ -65,17 +66,6 @@ class _ReplicateState(BaseModel):
     cols: NDArray[np.int_]
     wealth: NDArray[np.float64]
     metabolism: NDArray[np.float64]
-
-
-class _LookupContext(BaseModel):
-    """Read-only neighbourhood lookup context for a single agent move."""
-
-    model_config = ConfigDict(arbitrary_types_allowed=True, frozen=True)
-
-    sugar: NDArray[np.float64]
-    occupied: NDArray[np.bool_]
-    grid_size: int
-    vision: int
 
 
 def _build_capacity(grid_size: int) -> NDArray[np.float64]:
@@ -112,22 +102,45 @@ def _draw_metabolism(
     return rng.uniform(0.5 * metabolism_mean, 1.5 * metabolism_mean, size=n_agents)
 
 
-def _best_visible_cell(*, row: int, col: int, context: _LookupContext) -> tuple[int, int]:
-    sugar = context.sugar
-    best_value = sugar[row, col]
-    best_row, best_col = row, col
-    for delta in range(-context.vision, context.vision + 1):
-        if delta == 0:
-            continue
-        candidate_row = (row + delta) % context.grid_size
-        if not context.occupied[candidate_row, col] and sugar[candidate_row, col] > best_value:
-            best_value = sugar[candidate_row, col]
-            best_row, best_col = candidate_row, col
-        candidate_col = (col + delta) % context.grid_size
-        if not context.occupied[row, candidate_col] and sugar[row, candidate_col] > best_value:
-            best_value = sugar[row, candidate_col]
-            best_row, best_col = row, candidate_col
-    return best_row, best_col
+def _best_visible_cell(  # noqa: PLR0913, PLR0917 - hot loop, positional args avoid Pydantic overhead
+    row: int,
+    col: int,
+    sugar: NDArray[np.float64],
+    occupied: NDArray[np.bool_],
+    deltas: NDArray[np.int_],
+    grid_size: int,
+) -> tuple[int, int]:
+    rr = (row + deltas) % grid_size
+    cc = (col + deltas) % grid_size
+    row_values = np.where(occupied[rr, col], -np.inf, sugar[rr, col])
+    col_values = np.where(occupied[row, cc], -np.inf, sugar[row, cc])
+    self_value = sugar[row, col]
+    row_max = float(row_values.max())
+    col_max = float(col_values.max())
+    if max(row_max, col_max) <= self_value:
+        return row, col
+    if row_max >= col_max:
+        idx = int(np.argmax(row_values))
+        return int(rr[idx]), col
+    idx = int(np.argmax(col_values))
+    return row, int(cc[idx])
+
+
+def _move_agent(
+    agent: int,
+    state: _ReplicateState,
+    occupied: NDArray[np.bool_],
+    deltas: NDArray[np.int_],
+    grid_size: int,
+) -> None:
+    r0, c0 = int(state.rows[agent]), int(state.cols[agent])
+    occupied[r0, c0] = False
+    new_row, new_col = _best_visible_cell(r0, c0, state.sugar, occupied, deltas, grid_size)
+    state.rows[agent] = new_row
+    state.cols[agent] = new_col
+    occupied[new_row, new_col] = True
+    state.wealth[agent] += state.sugar[new_row, new_col]
+    state.sugar[new_row, new_col] = 0.0
 
 
 def _sugarscape_step(
@@ -138,25 +151,12 @@ def _sugarscape_step(
 ) -> None:
     occupied = np.zeros_like(state.sugar, dtype=np.bool_)
     occupied[state.rows, state.cols] = True
-    order = rng.permutation(state.rows.size)
-    for agent in order:
-        r0, c0 = int(state.rows[agent]), int(state.cols[agent])
-        occupied[r0, c0] = False
-        new_row, new_col = _best_visible_cell(
-            row=r0,
-            col=c0,
-            context=_LookupContext(
-                sugar=state.sugar,
-                occupied=occupied,
-                grid_size=params.grid_size,
-                vision=params.vision,
-            ),
-        )
-        state.rows[agent] = new_row
-        state.cols[agent] = new_col
-        occupied[new_row, new_col] = True
-        state.wealth[agent] += state.sugar[new_row, new_col]
-        state.sugar[new_row, new_col] = 0.0
+    deltas = np.array(
+        [d for d in range(-params.vision, params.vision + 1) if d != 0],
+        dtype=np.int_,
+    )
+    for agent in rng.permutation(state.rows.size):
+        _move_agent(int(agent), state, occupied, deltas, params.grid_size)
     state.wealth -= state.metabolism
     np.maximum(state.wealth, 0.0, out=state.wealth)
     np.minimum(state.sugar + params.regrowth_rate, state.capacity, out=state.sugar)

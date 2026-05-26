@@ -6,6 +6,8 @@ All functions operate on numpy arrays so they can be wrapped with
 dataframes so the rest of the analysis layer never touches raw pandas.
 """
 
+from typing import cast
+
 import numpy as np
 import pandas as pd
 from numpy.typing import NDArray
@@ -106,11 +108,22 @@ def convergence_half_life(
     return float(crossings[0])
 
 
-def _top_set_indices(values: NDArray[np.float64], *, fraction: float) -> set[int]:
-    if values.size == 0:
-        return set()
-    k = max(1, int(np.ceil(values.size * fraction)))
-    return {int(idx) for idx in np.argpartition(values, -k)[-k:]}
+def _in_top_matrix(panel: NDArray[np.float64], *, fraction: float) -> NDArray[np.bool_]:
+    """Boolean ``(n_steps, n_agents)`` mask marking each agent's top-fraction membership.
+
+    Returns
+    -------
+    NDArray[np.bool_]
+        ``True`` at ``(step, agent)`` iff that agent sits in the top
+        ``fraction`` of the population at that step.
+    """
+    n_steps, n_agents = panel.shape
+    in_top = np.zeros(panel.shape, dtype=bool)
+    k = max(1, int(np.ceil(n_agents * fraction)))
+    for step in range(n_steps):
+        idx = np.argpartition(panel[step, :], -k)[-k:]
+        in_top[step, idx] = True
+    return in_top
 
 
 def top_pct_turnover_per_step(
@@ -120,13 +133,13 @@ def top_pct_turnover_per_step(
 ) -> NDArray[np.float64]:
     if panel.shape[0] < _MINIMUM_STEPS_FOR_MOBILITY:
         return np.zeros(0, dtype=np.float64)
-    rates = np.empty(panel.shape[0] - 1, dtype=np.float64)
-    for step in range(panel.shape[0] - 1):
-        previous = _top_set_indices(panel[step, :], fraction=fraction)
-        following = _top_set_indices(panel[step + 1, :], fraction=fraction)
-        denom = max(1, len(previous))
-        rates[step] = len(previous - following) / denom
-    return rates
+    if panel.shape[1] == 0:
+        return np.zeros(panel.shape[0] - 1, dtype=np.float64)
+    in_top = _in_top_matrix(panel, fraction=fraction)
+    overlap = np.logical_and(in_top[:-1, :], in_top[1:, :]).sum(axis=1).astype(np.float64)
+    denom = float(max(1, in_top[0, :].sum()))
+    rates = 1.0 - overlap / denom
+    return cast("NDArray[np.float64]", rates)
 
 
 def top_pct_turnover_rate(panel: NDArray[np.float64], *, fraction: float = _DEFAULT_TOP_FRACTION) -> float:
@@ -138,43 +151,43 @@ def top_pct_persistence_rate(panel: NDArray[np.float64], *, fraction: float = _D
     return 1.0 - top_pct_turnover_rate(panel, fraction=fraction)
 
 
+def _spell_rows(
+    panel: NDArray[np.float64],
+    *,
+    fraction: float,
+    run_index: int,
+) -> list[dict[str, int | bool]]:
+    n_steps, n_agents = panel.shape
+    if n_steps == 0 or n_agents == 0:
+        return []
+    in_top = _in_top_matrix(panel, fraction=fraction)
+    padded = np.pad(in_top.astype(np.int8), pad_width=((1, 1), (0, 0)))
+    edges = np.diff(padded, axis=0)
+    rows: list[dict[str, int | bool]] = []
+    for agent in range(n_agents):
+        starts = np.where(edges[:, agent] == 1)[0]
+        ends = np.where(edges[:, agent] == -1)[0]
+        for spell_id, (start, end) in enumerate(zip(starts, ends, strict=True)):
+            rows.append(
+                {
+                    "run": int(run_index),
+                    "agent": int(agent),
+                    "spell": int(spell_id),
+                    "duration": int(end - start),
+                    "censored": bool(end == n_steps),
+                },
+            )
+    return rows
+
+
 def top_pct_spells(
     panel: NDArray[np.float64],
     *,
     fraction: float = _DEFAULT_TOP_FRACTION,
     run_index: int = 0,
 ) -> DataFrame[TopPctSpell]:
-    rows: list[dict[str, int | bool]] = []
-    n_steps, n_agents = panel.shape
-    for agent in range(n_agents):
-        in_top_top = np.zeros(n_steps, dtype=bool)
-        for step in range(n_steps):
-            in_top_top[step] = agent in _top_set_indices(panel[step, :], fraction=fraction)
-        spell_id = 0
-        step = 0
-        while step < n_steps:
-            if not in_top_top[step]:
-                step += 1
-                continue
-            start = step
-            while step < n_steps and in_top_top[step]:
-                step += 1
-            duration = step - start
-            censored = step == n_steps
-            rows.append(
-                {
-                    "run": int(run_index),
-                    "agent": int(agent),
-                    "spell": int(spell_id),
-                    "duration": int(duration),
-                    "censored": bool(censored),
-                },
-            )
-            spell_id += 1
-    frame = pd.DataFrame(
-        rows,
-        columns=["run", "agent", "spell", "duration", "censored"],
-    )
+    rows = _spell_rows(panel, fraction=fraction, run_index=run_index)
+    frame = pd.DataFrame(rows, columns=["run", "agent", "spell", "duration", "censored"])
     frame["run"] = frame["run"].astype("int64")
     frame["agent"] = frame["agent"].astype("int64")
     frame["spell"] = frame["spell"].astype("int64")
@@ -198,11 +211,9 @@ def mean_tenure_from_spells(spells: DataFrame[TopPctSpell]) -> KaplanMeierEstima
 
 
 def _agent_decile(panel: NDArray[np.float64]) -> NDArray[np.int_]:
-    decile = np.empty(panel.shape, dtype=np.int_)
-    for step in range(panel.shape[0]):
-        ranks = np.argsort(np.argsort(panel[step, :]))
-        decile[step, :] = np.minimum(_NUM_DECILES, (ranks * _NUM_DECILES // panel.shape[1]) + 1)
-    return decile
+    order = np.argsort(panel, axis=1, kind="stable")
+    ranks = np.argsort(order, axis=1, kind="stable")
+    return np.minimum(_NUM_DECILES, (ranks * _NUM_DECILES // panel.shape[1]) + 1).astype(np.int_)
 
 
 def bottom_to_top_rise_count(

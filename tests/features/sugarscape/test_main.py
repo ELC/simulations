@@ -5,12 +5,24 @@ def test_sugarscape_main_renders_without_exception() -> None:
     test = AppTest.from_string(
         "from stlite_hello.features.sugarscape import main\nmain()\n",
     )
+
+    test.run(timeout=10)
+
+    assert not test.exception
+
+
+def test_sugarscape_run_button_executes_simulation_and_renders_sections() -> None:
+    test = AppTest.from_string(
+        "from stlite_hello.features.sugarscape import main\nmain()\n",
+    )
     test.session_state["sugarscape_runs"] = 2
     test.session_state["sugarscape_trajectory_samples"] = 4
     test.session_state["sugarscape_resamples"] = 200
     test.session_state["sugarscape_simple_agents"] = 12
     test.session_state["sugarscape_simple_steps"] = 10
     test.session_state["sugarscape_simple_vision"] = 3
+    test.run(timeout=10)
+    test.button(key="run_outcome::sugarscape::button").click()
 
     test.run(timeout=120)
 

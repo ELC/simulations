@@ -4,15 +4,18 @@ from typing import cast
 
 import altair as alt
 import numpy as np
+import pandas as pd
 import pandera.pandas as pa
 import streamlit as st
+from numpy.typing import NDArray
 from pandera.typing import DataFrame
 from pydantic import BaseModel, ConfigDict
 
-from stlite_hello.analysis import FocalPanel, RunBundle
+from stlite_hello.analysis import RunBundle
 
 _DEFAULT_HEIGHT = 320
 _RANK_BINS = 40
+_MAX_STEPS = 60
 
 
 class WealthCondensationData(pa.DataFrameModel):
@@ -34,7 +37,34 @@ class WealthCondensationHeading(BaseModel):
     color_label: str
 
 
-def aggregate_wealth_condensation(panel: DataFrame[FocalPanel]) -> DataFrame[WealthCondensationData]:
+def _sample_sorted_shares(
+    bundle: RunBundle,
+) -> tuple[NDArray[np.int64], NDArray[np.float64]]:
+    stacked = np.stack(bundle.panels, axis=0)
+    sorted_desc = -np.sort(-stacked, axis=2)
+    n_steps_full = sorted_desc.shape[1]
+    step_indices = np.linspace(0, n_steps_full - 1, num=min(_MAX_STEPS, n_steps_full), dtype=np.int64)
+    sampled = sorted_desc[:, step_indices, :]
+    totals = sampled.sum(axis=2, keepdims=True)
+    shares = sampled / np.where(totals > 0.0, totals, 1.0)
+    return step_indices, shares.astype(np.float64, copy=False)
+
+
+def _mean_shares_per_bin(shares: NDArray[np.float64]) -> NDArray[np.float64]:
+    n_runs, n_steps_sampled, n_agents = shares.shape
+    bucket = np.minimum(np.arange(n_agents) // max(1, n_agents // _RANK_BINS) + 1, _RANK_BINS)
+    aggregated = np.zeros((n_steps_sampled, _RANK_BINS), dtype=np.float64)
+    for rank_bin in range(1, _RANK_BINS + 1):
+        mask = bucket == rank_bin
+        if not mask.any():
+            continue
+        aggregated[:, rank_bin - 1] = shares[:, :, mask].sum(axis=(0, 2)) / float(
+            mask.sum() * n_runs,
+        )
+    return aggregated
+
+
+def aggregate_wealth_condensation(bundle: RunBundle) -> DataFrame[WealthCondensationData]:
     """Average per-step rank-binned wealth share across replicates.
 
     Returns
@@ -42,30 +72,17 @@ def aggregate_wealth_condensation(panel: DataFrame[FocalPanel]) -> DataFrame[Wea
     DataFrame[WealthCondensationData]
         Long-form heatmap data ready for Altair.
     """
-    frame = panel.copy()
-    frame["rank"] = (
-        frame.groupby(["run", "step"], sort=False)["value"].rank(method="first", ascending=False).astype(np.int64)
+    step_indices, shares = _sample_sorted_shares(bundle)
+    mean_share = _mean_shares_per_bin(shares)
+    step_grid, rank_grid = np.meshgrid(step_indices, np.arange(1, _RANK_BINS + 1), indexing="ij")
+    frame = pd.DataFrame(
+        {
+            "step": step_grid.ravel().astype(np.int64),
+            "rank": rank_grid.ravel().astype(np.int64),
+            "wealth_share": mean_share.ravel().astype(np.float64),
+        },
     )
-    agents_per_step = frame.groupby(["run", "step"], sort=False)["agent"].transform("count")
-    bucket_width = agents_per_step / _RANK_BINS
-    frame["rank_bin"] = np.minimum(
-        ((frame["rank"] - 1) // bucket_width).astype(np.int64) + 1,
-        _RANK_BINS,
-    )
-    totals = frame.groupby(["run", "step"], sort=False)["value"].transform("sum")
-    safe_totals = totals.where(totals > 0.0, 1.0)
-    frame["share"] = frame["value"] / safe_totals
-    aggregated = (
-        frame
-        .groupby(["step", "rank_bin"], sort=False)["share"]
-        .mean()
-        .reset_index()
-        .rename(columns={"rank_bin": "rank", "share": "wealth_share"})
-    )
-    aggregated["step"] = aggregated["step"].astype(np.int64)
-    aggregated["rank"] = aggregated["rank"].astype(np.int64)
-    aggregated["wealth_share"] = aggregated["wealth_share"].astype(np.float64)
-    return DataFrame[WealthCondensationData](aggregated)
+    return DataFrame[WealthCondensationData](frame)
 
 
 def build_wealth_condensation_chart(
@@ -109,7 +126,7 @@ class SpecialChartInputs(BaseModel):
 
 def render_special_chart(inputs: SpecialChartInputs) -> None:
     """Streamlit-glue: build and render the wealth-condensation heatmap."""
-    aggregated = aggregate_wealth_condensation(inputs.bundle.focal_panel)
+    aggregated = aggregate_wealth_condensation(inputs.bundle)
     chart = build_wealth_condensation_chart(aggregated, inputs.heading)
     st.altair_chart(cast("alt.Chart", chart), width="stretch")
 
