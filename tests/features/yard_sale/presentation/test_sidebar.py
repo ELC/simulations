@@ -1,4 +1,10 @@
+import pytest
 from streamlit.testing.v1 import AppTest
+
+_EXPECTED_SEED = 42
+_EXPECTED_RUNS = 3
+_EXPECTED_INITIAL_WEALTH = 250.0
+_EXPECTED_WIN = 0.6
 
 _ADVANCED_SCRIPT = """
 import streamlit as st
@@ -33,7 +39,7 @@ def test_sidebar_advanced_view_collects_full_advanced_params() -> None:
     test.run(timeout=30)
 
     assert not test.exception
-    assert test.session_state["resolved_seed"] == 42
-    assert test.session_state["resolved_runs"] == 3
-    assert test.session_state["resolved_initial_wealth"] == 250.0
-    assert test.session_state["resolved_win"] == 0.6
+    assert test.session_state["resolved_seed"] == _EXPECTED_SEED
+    assert test.session_state["resolved_runs"] == _EXPECTED_RUNS
+    assert test.session_state["resolved_initial_wealth"] == pytest.approx(_EXPECTED_INITIAL_WEALTH)
+    assert test.session_state["resolved_win"] == pytest.approx(_EXPECTED_WIN)

@@ -8,16 +8,16 @@ from stlite_hello.analysis import (
     run_replicates,
     summarize,
 )
-from stlite_hello.features.yard_sale.model import YARD_SALE_FEATURE, YardSaleConfig, simulate_once
 from stlite_hello.presentation import DownloadInputs
 
+from ..model import KINETIC_FEATURE, KineticExchangeConfig, simulate_once
 from . import sections
 from .sidebar import SidebarInputs, build_config
 from .special_chart import SpecialChartInputs, render_special_chart
-from .view_models import YARD_SALE_COPY, YARD_SALE_SPECIAL_HEADING
+from .view_models import KINETIC_COPY, KINETIC_SPECIAL_HEADING
 
 
-def _run(config: YardSaleConfig) -> RunBundle:
+def _run(config: KineticExchangeConfig) -> RunBundle:
     return run_replicates(
         simulate_once=simulate_once,
         params=config.params,
@@ -25,15 +25,15 @@ def _run(config: YardSaleConfig) -> RunBundle:
     )
 
 
-def _summarize(*, config: YardSaleConfig, bundle: RunBundle) -> SimulationReport:
+def _summarize(*, config: KineticExchangeConfig, bundle: RunBundle) -> SimulationReport:
     return summarize(bundle=bundle, config=config)
 
 
 def render() -> None:
-    """Render the Yard-Sale page end-to-end."""
-    copy = YARD_SALE_COPY
+    """Render the Kinetic Exchange page end-to-end."""
+    copy = KINETIC_COPY
     sections.render_page_header(copy.page_header)
-    defaults = YardSaleConfig()
+    defaults = KineticExchangeConfig()
     config = build_config(SidebarInputs(defaults=defaults))
     with st.spinner(f"Running {config.runs} replicates..."):
         bundle = _run(config)
@@ -49,10 +49,18 @@ def render() -> None:
     sections.render_aic_ranking(report.fits, copy.headings.aic_ranking)
     sections.render_decile_transitions(report.decile_transitions, copy.headings.decile_transitions)
     st.subheader(copy.special_chart_title)
-    render_special_chart(SpecialChartInputs(bundle=bundle, heading=YARD_SALE_SPECIAL_HEADING))
+    render_special_chart(
+        SpecialChartInputs(
+            bundle=bundle,
+            params=config.params,
+            seed=config.seed,
+            runs=config.runs,
+            heading=KINETIC_SPECIAL_HEADING,
+        ),
+    )
     sections.render_download(
         DownloadInputs(
-            feature=YARD_SALE_FEATURE,
+            feature=KINETIC_FEATURE,
             config=config,
             params=config.params,
             bundle=bundle,

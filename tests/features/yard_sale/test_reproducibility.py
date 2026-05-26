@@ -72,9 +72,7 @@ def test_yard_sale_export_snapshot_matches(
         report=report,
     )
 
-    headline_metrics = (
-        export.report.metrics_ci
-    )
+    headline_metrics = export.report.metrics_ci
     rounded = [
         {
             "metric": row["metric"],

@@ -44,10 +44,7 @@ def aggregate_wealth_condensation(panel: DataFrame[FocalPanel]) -> DataFrame[Wea
     """
     frame = panel.copy()
     frame["rank"] = (
-        frame
-        .groupby(["run", "step"], sort=False)["value"]
-        .rank(method="first", ascending=False)
-        .astype(np.int64)
+        frame.groupby(["run", "step"], sort=False)["value"].rank(method="first", ascending=False).astype(np.int64)
     )
     agents_per_step = frame.groupby(["run", "step"], sort=False)["agent"].transform("count")
     bucket_width = agents_per_step / _RANK_BINS
@@ -75,7 +72,13 @@ def build_wealth_condensation_chart(
     data: DataFrame[WealthCondensationData],
     heading: WealthCondensationHeading,
 ) -> alt.TopLevelMixin:
-    """Build the rank-vs-step wealth-condensation heatmap."""
+    """Build the rank-vs-step wealth-condensation heatmap.
+
+    Returns
+    -------
+    alt.TopLevelMixin
+        Altair heatmap layered chart ready for ``st.altair_chart``.
+    """
     chart = (
         alt
         .Chart(data)

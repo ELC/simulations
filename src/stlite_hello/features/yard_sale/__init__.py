@@ -1,7 +1,6 @@
 """Yard-Sale wealth-exchange simulation slice."""
 
 import streamlit as st
-from streamlit.navigation.page import StreamlitPage
 
 from .model import (
     YARD_SALE_DEFAULT_AGENTS,
