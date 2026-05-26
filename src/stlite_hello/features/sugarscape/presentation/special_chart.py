@@ -10,7 +10,7 @@ import streamlit as st
 from pandera.typing import DataFrame
 from pydantic import BaseModel, ConfigDict
 
-from ..model import AdvancedParams, final_snapshot
+from stlite_hello.features.sugarscape.model import AdvancedParams, final_snapshot
 
 _DEFAULT_HEIGHT = 360
 

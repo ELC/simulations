@@ -54,6 +54,30 @@ class SpatialSnapshot(BaseModel):
     agent_wealth: NDArray[np.float64]
 
 
+class _ReplicateState(BaseModel):
+    """Mutable replicate state bundled to keep helper arities small."""
+
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+
+    sugar: NDArray[np.float64]
+    capacity: NDArray[np.float64]
+    rows: NDArray[np.int_]
+    cols: NDArray[np.int_]
+    wealth: NDArray[np.float64]
+    metabolism: NDArray[np.float64]
+
+
+class _LookupContext(BaseModel):
+    """Read-only neighbourhood lookup context for a single agent move."""
+
+    model_config = ConfigDict(arbitrary_types_allowed=True, frozen=True)
+
+    sugar: NDArray[np.float64]
+    occupied: NDArray[np.bool_]
+    grid_size: int
+    vision: int
+
+
 def _build_capacity(grid_size: int) -> NDArray[np.float64]:
     coords = np.arange(grid_size, dtype=np.float64)
     rr, cc = np.meshgrid(coords, coords, indexing="ij")
@@ -71,7 +95,8 @@ def _place_agents(
 ) -> tuple[NDArray[np.int_], NDArray[np.int_]]:
     total_cells = grid_size * grid_size
     if n_agents > total_cells:
-        raise ValueError("More agents than cells; pick a larger grid or fewer agents.")
+        msg = "More agents than cells; pick a larger grid or fewer agents."
+        raise ValueError(msg)
     cells = rng.choice(total_cells, size=n_agents, replace=False)
     rows = (cells // grid_size).astype(np.int_)
     cols = (cells % grid_size).astype(np.int_)
@@ -87,27 +112,19 @@ def _draw_metabolism(
     return rng.uniform(0.5 * metabolism_mean, 1.5 * metabolism_mean, size=n_agents)
 
 
-def _best_visible_cell(
-    *,
-    row: int,
-    col: int,
-    vision: int,
-    grid_size: int,
-    sugar: NDArray[np.float64],
-    occupied: NDArray[np.bool_],
-) -> tuple[int, int]:
+def _best_visible_cell(*, row: int, col: int, context: _LookupContext) -> tuple[int, int]:
+    sugar = context.sugar
     best_value = sugar[row, col]
     best_row, best_col = row, col
-    deltas = range(-vision, vision + 1)
-    for delta in deltas:
+    for delta in range(-context.vision, context.vision + 1):
         if delta == 0:
             continue
-        candidate_row = (row + delta) % grid_size
-        if not occupied[candidate_row, col] and sugar[candidate_row, col] > best_value:
+        candidate_row = (row + delta) % context.grid_size
+        if not context.occupied[candidate_row, col] and sugar[candidate_row, col] > best_value:
             best_value = sugar[candidate_row, col]
             best_row, best_col = candidate_row, col
-        candidate_col = (col + delta) % grid_size
-        if not occupied[row, candidate_col] and sugar[row, candidate_col] > best_value:
+        candidate_col = (col + delta) % context.grid_size
+        if not context.occupied[row, candidate_col] and sugar[row, candidate_col] > best_value:
             best_value = sugar[row, candidate_col]
             best_row, best_col = row, candidate_col
     return best_row, best_col
@@ -115,37 +132,34 @@ def _best_visible_cell(
 
 def _sugarscape_step(
     *,
-    sugar: NDArray[np.float64],
-    capacity: NDArray[np.float64],
-    rows: NDArray[np.int_],
-    cols: NDArray[np.int_],
-    wealth: NDArray[np.float64],
-    metabolism: NDArray[np.float64],
+    state: _ReplicateState,
     params: AdvancedParams,
     rng: np.random.Generator,
 ) -> None:
-    occupied = np.zeros_like(sugar, dtype=np.bool_)
-    occupied[rows, cols] = True
-    order = rng.permutation(rows.size)
+    occupied = np.zeros_like(state.sugar, dtype=np.bool_)
+    occupied[state.rows, state.cols] = True
+    order = rng.permutation(state.rows.size)
     for agent in order:
-        r0, c0 = int(rows[agent]), int(cols[agent])
+        r0, c0 = int(state.rows[agent]), int(state.cols[agent])
         occupied[r0, c0] = False
         new_row, new_col = _best_visible_cell(
             row=r0,
             col=c0,
-            vision=params.vision,
-            grid_size=params.grid_size,
-            sugar=sugar,
-            occupied=occupied,
+            context=_LookupContext(
+                sugar=state.sugar,
+                occupied=occupied,
+                grid_size=params.grid_size,
+                vision=params.vision,
+            ),
         )
-        rows[agent] = new_row
-        cols[agent] = new_col
+        state.rows[agent] = new_row
+        state.cols[agent] = new_col
         occupied[new_row, new_col] = True
-        wealth[agent] += sugar[new_row, new_col]
-        sugar[new_row, new_col] = 0.0
-    wealth -= metabolism
-    np.maximum(wealth, 0.0, out=wealth)
-    np.minimum(sugar + params.regrowth_rate, capacity, out=sugar)
+        state.wealth[agent] += state.sugar[new_row, new_col]
+        state.sugar[new_row, new_col] = 0.0
+    state.wealth -= state.metabolism
+    np.maximum(state.wealth, 0.0, out=state.wealth)
+    np.minimum(state.sugar + params.regrowth_rate, state.capacity, out=state.sugar)
 
 
 def simulate_once(params: AdvancedParams, rng: np.random.Generator) -> ReplicateResult:
@@ -171,33 +185,34 @@ def final_snapshot(params: AdvancedParams, rng: np.random.Generator) -> SpatialS
     return _run_replicate_snapshot(params, rng)
 
 
-def _run_replicate(
-    params: AdvancedParams,
-    rng: np.random.Generator,
-) -> tuple[NDArray[np.float64], NDArray[np.int_]]:
+def _initial_state(params: AdvancedParams, rng: np.random.Generator) -> _ReplicateState:
     capacity = _build_capacity(params.grid_size)
-    sugar = capacity.copy()
     rows, cols = _place_agents(n_agents=params.n_agents, grid_size=params.grid_size, rng=rng)
     metabolism = _draw_metabolism(
         n_agents=params.n_agents,
         metabolism_mean=params.metabolism_mean,
         rng=rng,
     )
-    wealth = np.full(params.n_agents, params.initial_endowment, dtype=np.float64)
+    return _ReplicateState(
+        sugar=capacity.copy(),
+        capacity=capacity,
+        rows=rows,
+        cols=cols,
+        wealth=np.full(params.n_agents, params.initial_endowment, dtype=np.float64),
+        metabolism=metabolism,
+    )
+
+
+def _run_replicate(
+    params: AdvancedParams,
+    rng: np.random.Generator,
+) -> tuple[NDArray[np.float64], NDArray[np.int_]]:
+    state = _initial_state(params, rng)
     panel = np.empty((params.n_steps + 1, params.n_agents), dtype=np.float64)
-    panel[0] = wealth
+    panel[0] = state.wealth
     for step in range(1, params.n_steps + 1):
-        _sugarscape_step(
-            sugar=sugar,
-            capacity=capacity,
-            rows=rows,
-            cols=cols,
-            wealth=wealth,
-            metabolism=metabolism,
-            params=params,
-            rng=rng,
-        )
-        panel[step] = wealth
+        _sugarscape_step(state=state, params=params, rng=rng)
+        panel[step] = state.wealth
     return panel, np.arange(params.n_steps + 1, dtype=np.int_)
 
 
@@ -205,31 +220,14 @@ def _run_replicate_snapshot(
     params: AdvancedParams,
     rng: np.random.Generator,
 ) -> SpatialSnapshot:
-    capacity = _build_capacity(params.grid_size)
-    sugar = capacity.copy()
-    rows, cols = _place_agents(n_agents=params.n_agents, grid_size=params.grid_size, rng=rng)
-    metabolism = _draw_metabolism(
-        n_agents=params.n_agents,
-        metabolism_mean=params.metabolism_mean,
-        rng=rng,
-    )
-    wealth = np.full(params.n_agents, params.initial_endowment, dtype=np.float64)
+    state = _initial_state(params, rng)
     for _ in range(1, params.n_steps + 1):
-        _sugarscape_step(
-            sugar=sugar,
-            capacity=capacity,
-            rows=rows,
-            cols=cols,
-            wealth=wealth,
-            metabolism=metabolism,
-            params=params,
-            rng=rng,
-        )
+        _sugarscape_step(state=state, params=params, rng=rng)
     return SpatialSnapshot(
-        sugar_grid=sugar,
-        agent_rows=rows,
-        agent_cols=cols,
-        agent_wealth=wealth,
+        sugar_grid=state.sugar,
+        agent_rows=state.rows,
+        agent_cols=state.cols,
+        agent_wealth=state.wealth,
     )
 
 
