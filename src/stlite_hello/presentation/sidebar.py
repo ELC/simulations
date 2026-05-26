@@ -1,9 +1,7 @@
-"""Sidebar widgets that turn user input into typed Pydantic configs."""
-
 import streamlit as st
-from pydantic import BaseModel, ConfigDict, Field
 
 from stlite_hello.analysis import AggregationConfig
+from stlite_hello.view_models import AggregationSidebarInputs
 
 _MIN_RUNS = 1
 _MAX_RUNS = 500
@@ -13,37 +11,7 @@ _MIN_TRAJECTORY_SAMPLES = 5
 _MAX_TRAJECTORY_SAMPLES = 200
 
 
-class AggregationSidebarLabels(BaseModel):
-    """Labels for the aggregation expander in the sidebar."""
-
-    model_config = ConfigDict(frozen=True)
-
-    expander_title: str
-    runs_label: str
-    seed_label: str
-    confidence_label: str
-    bootstrap_resamples_label: str
-    trajectory_samples_label: str
-
-
-class AggregationSidebarInputs(BaseModel):
-    """Bundle of typed inputs for :func:`build_aggregation_config`."""
-
-    model_config = ConfigDict(frozen=True)
-
-    defaults: AggregationConfig
-    labels: AggregationSidebarLabels
-    key_prefix: str = Field(min_length=1)
-
-
 def build_aggregation_config(inputs: AggregationSidebarInputs) -> AggregationConfig:
-    """Render the aggregation expander and return a fresh :class:`AggregationConfig`.
-
-    Returns
-    -------
-    AggregationConfig
-        Frozen Pydantic config reflecting the current widget state.
-    """
     defaults = inputs.defaults
     labels = inputs.labels
     with st.sidebar.expander(labels.expander_title, expanded=False):
@@ -92,10 +60,3 @@ def build_aggregation_config(inputs: AggregationSidebarInputs) -> AggregationCon
         bootstrap_resamples=int(resamples),
         trajectory_step_samples=int(trajectory_samples),
     )
-
-
-__all__ = [
-    "AggregationSidebarInputs",
-    "AggregationSidebarLabels",
-    "build_aggregation_config",
-]

@@ -1,5 +1,3 @@
-"""Sidebar: turn user input into a frozen :class:`YardSaleConfig`."""
-
 from typing import Literal
 
 import streamlit as st
@@ -7,21 +5,18 @@ from pydantic import BaseModel, ConfigDict
 
 from stlite_hello.analysis import AggregationConfig
 from stlite_hello.features.yard_sale.model import AdvancedParams, SimpleParams, YardSaleConfig
-from stlite_hello.presentation import (
+from stlite_hello.features.yard_sale.view_models import YARD_SALE_COPY
+from stlite_hello.presentation import build_aggregation_config
+from stlite_hello.view_models import (
     AdvancedToggleLabels,
     AggregationSidebarInputs,
     SeedSliderLabels,
-    build_aggregation_config,
 )
-
-from .view_models import YARD_SALE_COPY
 
 _KEY_PREFIX = "yard_sale"
 
 
 class _SidebarParams(BaseModel):
-    """View choice + the chosen params payload, fully typed."""
-
     model_config = ConfigDict(frozen=True)
 
     view: Literal["simple", "advanced"]
@@ -126,21 +121,12 @@ def _render_params(defaults: AdvancedParams, labels: AdvancedToggleLabels) -> _S
 
 
 class SidebarInputs(BaseModel):
-    """Typed defaults for :func:`build_config`."""
-
     model_config = ConfigDict(frozen=True)
 
     defaults: YardSaleConfig
 
 
 def build_config(inputs: SidebarInputs) -> YardSaleConfig:
-    """Render the sidebar and return a frozen :class:`YardSaleConfig`.
-
-    Returns
-    -------
-    YardSaleConfig
-        Fully validated, no primitives in the public signature.
-    """
     defaults = inputs.defaults
     sidebar_params = _render_params(defaults.params, YARD_SALE_COPY.view_toggle)
     seed = _render_seed(YARD_SALE_COPY.seed, defaults.seed)
@@ -167,6 +153,3 @@ def build_config(inputs: SidebarInputs) -> YardSaleConfig:
         bootstrap_method=aggregation.bootstrap_method,
         params=sidebar_params.params,
     )
-
-
-__all__ = ["SidebarInputs", "build_config"]

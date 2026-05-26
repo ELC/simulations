@@ -1,7 +1,10 @@
-"""Yard-Sale wealth-exchange simulation slice."""
-
 import streamlit as st
 
+from .charts import (
+    WealthCondensationHeading,
+    aggregate_wealth_condensation,
+    build_wealth_condensation_chart,
+)
 from .model import (
     YARD_SALE_DEFAULT_AGENTS,
     YARD_SALE_DEFAULT_FRACTION,
@@ -12,20 +15,18 @@ from .model import (
     AdvancedParams,
     SimpleParams,
     YardSaleConfig,
-    simulate_once,
 )
-from .page import pages
 from .presentation import (
-    YARD_SALE_COPY,
-    YARD_SALE_SPECIAL_HEADING,
+    SidebarInputs,
     SpecialChartInputs,
-    WealthCondensationData,
-    WealthCondensationHeading,
-    aggregate_wealth_condensation,
-    build_wealth_condensation_chart,
+    build_config,
+    pages,
     render,
     render_special_chart,
 )
+from .schemas import WealthCondensationData
+from .simulation import simulate_once
+from .view_models import YARD_SALE_COPY, YARD_SALE_SPECIAL_HEADING
 
 
 def main() -> None:
@@ -44,12 +45,14 @@ __all__ = [
     "YARD_SALE_FEATURE",
     "YARD_SALE_SPECIAL_HEADING",
     "AdvancedParams",
+    "SidebarInputs",
     "SimpleParams",
     "SpecialChartInputs",
     "WealthCondensationData",
     "WealthCondensationHeading",
     "YardSaleConfig",
     "aggregate_wealth_condensation",
+    "build_config",
     "build_wealth_condensation_chart",
     "main",
     "pages",

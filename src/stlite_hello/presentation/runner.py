@@ -1,70 +1,10 @@
-"""Gated run-control: button + download toolbar + cached outcome.
-
-Every simulation page renders the same shape: read params from the sidebar,
-ask the user to click "Run simulation", then summarise. This helper owns
-that loop so the per-feature controllers stay short and consistent.
-Outcomes are cached in ``st.session_state`` keyed by feature, so re-renders
-triggered by other widgets keep showing the last result without re-running
-the simulation.
-
-The toolbar also exposes the per-run JSON download right next to the run
-button. The download button stays *disabled* until a run completes, so the
-user never sees a stale or empty file.
-"""
-
 import time
-from collections.abc import Callable
 from typing import cast
 
 import streamlit as st
-from pydantic import BaseModel, ConfigDict
 
-from stlite_hello.analysis import (
-    AggregationConfig,
-    RunBundle,
-    SimulationReport,
-    export_filename,
-    serialize_run,
-)
-
-from .sections import DownloadHeading
-
-
-class RunControlLabels(BaseModel):
-    """User-facing strings for the run-control widget."""
-
-    model_config = ConfigDict(frozen=True)
-
-    run_button: str
-    idle_message: str
-    spinner_template: str
-    elapsed_template: str
-
-
-class SimulationOutcome(BaseModel):
-    """Result of one completed run, cached across reruns."""
-
-    model_config = ConfigDict(frozen=True, arbitrary_types_allowed=True)
-
-    bundle: RunBundle
-    report: SimulationReport
-    elapsed_seconds: float
-    config: AggregationConfig
-    params: BaseModel
-
-
-class RunControlInputs(BaseModel):
-    """Typed inputs for :func:`render_run_control`."""
-
-    model_config = ConfigDict(frozen=True, arbitrary_types_allowed=True)
-
-    feature: str
-    config: AggregationConfig
-    params: BaseModel
-    run: Callable[[], RunBundle]
-    summarize: Callable[[RunBundle], SimulationReport]
-    labels: RunControlLabels
-    download: DownloadHeading
+from stlite_hello.analysis import export_filename, serialize_run
+from stlite_hello.view_models import RunControlInputs, SimulationOutcome
 
 
 def _session_key(feature: str) -> str:
@@ -154,11 +94,3 @@ def render_run_control(inputs: RunControlInputs) -> SimulationOutcome | None:
         ),
     )
     return cached
-
-
-__all__ = [
-    "RunControlInputs",
-    "RunControlLabels",
-    "SimulationOutcome",
-    "render_run_control",
-]

@@ -1,11 +1,3 @@
-"""Run a simulation N times with independent seeds and pack the result.
-
-A simulation is any callable ``simulate_once(params, rng) -> ReplicateResult``.
-The aggregator spawns ``runs`` independent child seeds from
-``np.random.SeedSequence(seed)`` so every replicate is fully reproducible
-and uncorrelated with the others.
-"""
-
 from collections.abc import Callable
 from typing import Any
 
@@ -147,12 +139,3 @@ def run_replicates(
         panels=tuple(panels),
         step_indices=tuple(step_indices),
     )
-
-
-__all__ = [
-    "ParamsProtocol",
-    "ReplicateResult",
-    "RunBundle",
-    "SimulateOnce",
-    "run_replicates",
-]

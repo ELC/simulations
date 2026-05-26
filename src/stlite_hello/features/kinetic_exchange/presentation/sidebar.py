@@ -1,5 +1,3 @@
-"""Sidebar: turn user input into a frozen :class:`KineticExchangeConfig`."""
-
 from typing import Literal
 
 import streamlit as st
@@ -7,14 +5,13 @@ from pydantic import BaseModel, ConfigDict
 
 from stlite_hello.analysis import AggregationConfig
 from stlite_hello.features.kinetic_exchange.model import AdvancedParams, KineticExchangeConfig, SimpleParams
-from stlite_hello.presentation import (
+from stlite_hello.features.kinetic_exchange.view_models import KINETIC_COPY
+from stlite_hello.presentation import build_aggregation_config
+from stlite_hello.view_models import (
     AdvancedToggleLabels,
     AggregationSidebarInputs,
     SeedSliderLabels,
-    build_aggregation_config,
 )
-
-from .view_models import KINETIC_COPY
 
 _KEY_PREFIX = "kinetic_exchange"
 
@@ -44,7 +41,7 @@ def _render_simple_form(defaults: SimpleParams) -> AdvancedParams:
         key=f"{_KEY_PREFIX}_simple_steps",
     )
     lambda_mean = st.slider(
-        "Mean savings propensity λ",
+        "Mean savings propensity",
         min_value=0.0,
         max_value=1.0,
         value=defaults.lambda_mean,
@@ -125,13 +122,6 @@ class SidebarInputs(BaseModel):
 
 
 def build_config(inputs: SidebarInputs) -> KineticExchangeConfig:
-    """Render the sidebar and return a frozen :class:`KineticExchangeConfig`.
-
-    Returns
-    -------
-    KineticExchangeConfig
-        Fully validated, no primitives in the public signature.
-    """
     defaults = inputs.defaults
     sidebar_params = _render_params(defaults.params, KINETIC_COPY.view_toggle)
     seed = _render_seed(KINETIC_COPY.seed, defaults.seed)
@@ -158,6 +148,3 @@ def build_config(inputs: SidebarInputs) -> KineticExchangeConfig:
         bootstrap_method=aggregation.bootstrap_method,
         params=sidebar_params.params,
     )
-
-
-__all__ = ["SidebarInputs", "build_config"]

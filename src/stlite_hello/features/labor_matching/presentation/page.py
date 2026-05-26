@@ -1,20 +1,15 @@
-"""Streamlit page wiring for the labor-matching simulation."""
-
 import streamlit as st
 from streamlit.navigation.page import StreamlitPage
 
-from .presentation import render
+from .controller import render
 
 
 def pages() -> list[StreamlitPage]:
     return [
         st.Page(
             render,
-            title="Labor matching",
+            title="Labor Matching",
             icon=":material/work:",
-            url_path="labor-matching",
+            url_path="labor_matching",
         ),
     ]
-
-
-__all__ = ["pages"]

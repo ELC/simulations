@@ -1,11 +1,3 @@
-"""Tests for the shared run-control helper.
-
-Exercises both the idle path (no click → ``None`` returned, idle message
-rendered) and the clicked path (run + cached outcome + elapsed caption).
-We drive Streamlit via :class:`streamlit.testing.v1.AppTest` so the
-assertions reflect real session-state behaviour rather than mocked widgets.
-"""
-
 import numpy as np
 import pandas as pd
 from pandera.typing import DataFrame
@@ -24,7 +16,7 @@ from stlite_hello.analysis import (
     TopPctSpell,
 )
 from stlite_hello.analysis.schemas import DecileTransition, FinalPopulation, FocalPanel
-from stlite_hello.presentation import DownloadHeading, RunControlInputs, RunControlLabels
+from stlite_hello.view_models import DownloadHeading, RunControlInputs, RunControlLabels
 
 _FEATURE = "runner_test"
 _BUTTON_KEY = f"run_outcome::{_FEATURE}::button"

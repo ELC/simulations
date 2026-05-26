@@ -1,27 +1,13 @@
-"""Presentation layer for the Double Auction feature."""
-
 from .controller import render
+from .page import pages
 from .sidebar import SidebarInputs, build_config
-from .special_chart import (
-    SpecialChartInputs,
-    SupplyDemandData,
-    SupplyDemandHeading,
-    build_supply_demand_chart,
-    build_supply_demand_frame,
-    render_special_chart,
-)
-from .view_models import DOUBLE_AUCTION_COPY, DOUBLE_AUCTION_SPECIAL_HEADING
+from .special_chart import SpecialChartInputs, render_special_chart
 
 __all__ = [
-    "DOUBLE_AUCTION_COPY",
-    "DOUBLE_AUCTION_SPECIAL_HEADING",
     "SidebarInputs",
     "SpecialChartInputs",
-    "SupplyDemandData",
-    "SupplyDemandHeading",
     "build_config",
-    "build_supply_demand_chart",
-    "build_supply_demand_frame",
+    "pages",
     "render",
     "render_special_chart",
 ]

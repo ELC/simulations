@@ -1,5 +1,3 @@
-"""Sidebar: turn user input into a frozen :class:`CournotConfig`."""
-
 from typing import Literal
 
 import streamlit as st
@@ -7,14 +5,13 @@ from pydantic import BaseModel, ConfigDict
 
 from stlite_hello.analysis import AggregationConfig
 from stlite_hello.features.cournot.model import AdvancedParams, CournotConfig, SimpleParams
-from stlite_hello.presentation import (
+from stlite_hello.features.cournot.view_models import COURNOT_COPY
+from stlite_hello.presentation import build_aggregation_config
+from stlite_hello.view_models import (
     AdvancedToggleLabels,
     AggregationSidebarInputs,
     SeedSliderLabels,
-    build_aggregation_config,
 )
-
-from .view_models import COURNOT_COPY
 
 _KEY_PREFIX = "cournot"
 
@@ -140,13 +137,6 @@ class SidebarInputs(BaseModel):
 
 
 def build_config(inputs: SidebarInputs) -> CournotConfig:
-    """Render the sidebar and return a frozen :class:`CournotConfig`.
-
-    Returns
-    -------
-    CournotConfig
-        Fully validated, no primitives in the public signature.
-    """
     defaults = inputs.defaults
     sidebar_params = _render_params(defaults.params, COURNOT_COPY.view_toggle)
     seed = _render_seed(COURNOT_COPY.seed, defaults.seed)
@@ -173,6 +163,3 @@ def build_config(inputs: SidebarInputs) -> CournotConfig:
         bootstrap_method=aggregation.bootstrap_method,
         params=sidebar_params.params,
     )
-
-
-__all__ = ["SidebarInputs", "build_config"]

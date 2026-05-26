@@ -1,10 +1,3 @@
-"""Pure Altair chart builders shared by every simulation.
-
-Each function takes a Pandera-typed dataframe plus a frozen Pydantic
-heading view-model and returns an ``alt.Chart``. No Streamlit imports
-here; the ``presentation/`` layer of each feature renders these charts.
-"""
-
 from typing import cast
 
 import altair as alt
@@ -154,15 +147,3 @@ def build_decile_transitions(
         .properties(title=heading.title, height=_DEFAULT_HEIGHT)
     )
     return cast("alt.TopLevelMixin", chart)
-
-
-__all__ = [
-    "ChartHeading",
-    "DecileHeatmapHeading",
-    "KdeFitsHeading",
-    "build_aic_ranking",
-    "build_decile_transitions",
-    "build_kde_with_fits",
-    "build_lorenz",
-    "build_metric_trajectories",
-]

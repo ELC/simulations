@@ -1,5 +1,3 @@
-"""Sidebar: turn user input into a frozen :class:`DoubleAuctionConfig`."""
-
 from typing import Literal
 
 import streamlit as st
@@ -7,14 +5,13 @@ from pydantic import BaseModel, ConfigDict
 
 from stlite_hello.analysis import AggregationConfig
 from stlite_hello.features.double_auction.model import AdvancedParams, DoubleAuctionConfig, SimpleParams
-from stlite_hello.presentation import (
+from stlite_hello.features.double_auction.view_models import DOUBLE_AUCTION_COPY
+from stlite_hello.presentation import build_aggregation_config
+from stlite_hello.view_models import (
     AdvancedToggleLabels,
     AggregationSidebarInputs,
     SeedSliderLabels,
-    build_aggregation_config,
 )
-
-from .view_models import DOUBLE_AUCTION_COPY
 
 _KEY_PREFIX = "double_auction"
 
@@ -125,13 +122,6 @@ class SidebarInputs(BaseModel):
 
 
 def build_config(inputs: SidebarInputs) -> DoubleAuctionConfig:
-    """Render the sidebar and return a frozen :class:`DoubleAuctionConfig`.
-
-    Returns
-    -------
-    DoubleAuctionConfig
-        Fully validated, no primitives in the public signature.
-    """
     defaults = inputs.defaults
     sidebar_params = _render_params(defaults.params, DOUBLE_AUCTION_COPY.view_toggle)
     seed = _render_seed(DOUBLE_AUCTION_COPY.seed, defaults.seed)
@@ -158,6 +148,3 @@ def build_config(inputs: SidebarInputs) -> DoubleAuctionConfig:
         bootstrap_method=aggregation.bootstrap_method,
         params=sidebar_params.params,
     )
-
-
-__all__ = ["SidebarInputs", "build_config"]

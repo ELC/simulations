@@ -1,5 +1,3 @@
-"""Base aggregation/runtime configuration for every simulation."""
-
 from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -19,6 +17,3 @@ class AggregationConfig(BaseModel):
     bootstrap_resamples: int = Field(default=500, ge=200, le=20_000)
     confidence_level: float = Field(default=0.95, gt=0.0, lt=1.0)
     bootstrap_method: Literal["BCa", "percentile", "basic"] = "BCa"
-
-
-__all__ = ["AggregationConfig"]

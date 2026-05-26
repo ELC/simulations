@@ -1,7 +1,5 @@
-"""Frozen view-model singletons holding Yard-Sale UI text."""
-
 from stlite_hello.analysis import ChartHeading, DecileHeatmapHeading, KdeFitsHeading
-from stlite_hello.presentation import (
+from stlite_hello.view_models import (
     DEFAULT_CHART_EXPLAINERS,
     DEFAULT_RUN_CONTROL_LABELS,
     AdvancedToggleLabels,
@@ -17,7 +15,7 @@ from stlite_hello.presentation import (
     SeedSliderLabels,
 )
 
-from .special_chart import WealthCondensationHeading
+from .charts import WealthCondensationHeading
 
 YARD_SALE_COPY = FeatureCopy(
     page_header=PageHeader(
@@ -29,7 +27,7 @@ YARD_SALE_COPY = FeatureCopy(
         ),
     ),
     example=ExampleCallout(
-        headline=("Commission-pool redistribution in high-turnover sales teams"),
+        headline="Commission-pool redistribution in high-turnover sales teams",
         summary=(
             "Imagine a 100-rep enterprise sales floor where every quarter each rep is "
             "randomly paired with a teammate to chase a fresh prospect. The winner of the "
@@ -59,13 +57,13 @@ YARD_SALE_COPY = FeatureCopy(
             ),
             Reference(
                 citation="Boghosian, Devitt-Lee, Johnson, Li, Marcq & Wang (2017)",
-                title=("Oligarchy as a phenomenon of asset exchange in the Yard-Sale model"),
+                title="Oligarchy as a phenomenon of asset exchange in the Yard-Sale model",
                 venue="Physica A: Statistical Mechanics and its Applications, 476, 15-37",
                 url="https://doi.org/10.1016/j.physa.2017.01.071",
             ),
             Reference(
                 citation="Chakraborti (2002)",
-                title=("Distributions of money in model markets of economy"),
+                title="Distributions of money in model markets of economy",
                 venue="International Journal of Modern Physics C, 13(10), 1315-1321",
                 url="https://doi.org/10.1142/S0129183102003905",
             ),
@@ -155,12 +153,10 @@ YARD_SALE_COPY = FeatureCopy(
     ),
 )
 
+
 YARD_SALE_SPECIAL_HEADING = WealthCondensationHeading(
     title="Wealth-condensation heatmap (rank vs step)",
     x_label="Step",
     y_label="Rank (1 = richest)",
     color_label="Mean wealth share",
 )
-
-
-__all__ = ["YARD_SALE_COPY", "YARD_SALE_SPECIAL_HEADING"]

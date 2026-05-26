@@ -1,7 +1,5 @@
-"""Frozen view-model singletons holding labor-matching UI text."""
-
 from stlite_hello.analysis import ChartHeading, DecileHeatmapHeading, KdeFitsHeading
-from stlite_hello.presentation import (
+from stlite_hello.view_models import (
     DEFAULT_CHART_EXPLAINERS,
     DEFAULT_RUN_CONTROL_LABELS,
     AdvancedToggleLabels,
@@ -17,7 +15,7 @@ from stlite_hello.presentation import (
     SeedSliderLabels,
 )
 
-from .special_chart import BeveridgeHeading
+from .charts import BeveridgeHeading
 
 LABOR_MATCHING_COPY = FeatureCopy(
     page_header=PageHeader(
@@ -160,12 +158,10 @@ LABOR_MATCHING_COPY = FeatureCopy(
     ),
 )
 
+
 LABOR_MATCHING_SPECIAL_HEADING = BeveridgeHeading(
     title="Beveridge curve traced through the simulation",
     x_label="Unemployment rate",
     y_label="Vacancy rate",
     step_label="Step",
 )
-
-
-__all__ = ["LABOR_MATCHING_COPY", "LABOR_MATCHING_SPECIAL_HEADING"]

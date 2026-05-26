@@ -1,5 +1,3 @@
-"""Sidebar: turn user input into a frozen :class:`LaborMatchingConfig`."""
-
 from typing import Literal
 
 import streamlit as st
@@ -11,14 +9,13 @@ from stlite_hello.features.labor_matching.model import (
     LaborMatchingConfig,
     SimpleParams,
 )
-from stlite_hello.presentation import (
+from stlite_hello.features.labor_matching.view_models import LABOR_MATCHING_COPY
+from stlite_hello.presentation import build_aggregation_config
+from stlite_hello.view_models import (
     AdvancedToggleLabels,
     AggregationSidebarInputs,
     SeedSliderLabels,
-    build_aggregation_config,
 )
-
-from .view_models import LABOR_MATCHING_COPY
 
 _KEY_PREFIX = "labor_matching"
 
@@ -167,13 +164,6 @@ class SidebarInputs(BaseModel):
 
 
 def build_config(inputs: SidebarInputs) -> LaborMatchingConfig:
-    """Render the sidebar and return a frozen :class:`LaborMatchingConfig`.
-
-    Returns
-    -------
-    LaborMatchingConfig
-        Fully validated config; no primitives in the public signature.
-    """
     defaults = inputs.defaults
     sidebar_params = _render_params(defaults.params, LABOR_MATCHING_COPY.view_toggle)
     seed = _render_seed(LABOR_MATCHING_COPY.seed, defaults.seed)
@@ -200,6 +190,3 @@ def build_config(inputs: SidebarInputs) -> LaborMatchingConfig:
         bootstrap_method=aggregation.bootstrap_method,
         params=sidebar_params.params,
     )
-
-
-__all__ = ["SidebarInputs", "build_config"]

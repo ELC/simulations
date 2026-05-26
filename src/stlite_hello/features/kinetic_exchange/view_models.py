@@ -1,7 +1,5 @@
-"""Frozen view-model singletons holding Kinetic Exchange UI text."""
-
 from stlite_hello.analysis import ChartHeading, DecileHeatmapHeading, KdeFitsHeading
-from stlite_hello.presentation import (
+from stlite_hello.view_models import (
     DEFAULT_CHART_EXPLAINERS,
     DEFAULT_RUN_CONTROL_LABELS,
     AdvancedToggleLabels,
@@ -17,7 +15,7 @@ from stlite_hello.presentation import (
     SeedSliderLabels,
 )
 
-from .special_chart import SavingsWealthHeading
+from .charts import SavingsWealthHeading
 
 KINETIC_COPY = FeatureCopy(
     page_header=PageHeader(
@@ -35,8 +33,8 @@ KINETIC_COPY = FeatureCopy(
             "millions of households participate in rotating-savings clubs every year. Twelve "
             "neighbours meet monthly, each contributes a fixed share of their disposable income, "
             "and a randomly drawn member takes the whole pot that month. The catch: each member "
-            "saves a personal fraction of their pre-club income — some are frugal (high λ), "
-            "others spend down (low λ). After enough cycles, the wealth distribution across "
+            "saves a personal fraction of their pre-club income — some are frugal (high lambda), "
+            "others spend down (low lambda). After enough cycles, the wealth distribution across "
             "members looks almost exactly like a Gamma when everyone saves at the same rate, "
             "but acquires a heavy Pareto tail as soon as savings rates become heterogeneous. "
             "Field economists studying these clubs in Ghana and Kerala have measured both "
@@ -45,32 +43,32 @@ KINETIC_COPY = FeatureCopy(
         ),
         mechanism=(
             "At every step the model picks a random pair (i, j) and redistributes their pooled "
-            "wealth `wi + wj` according to a uniform draw ε ∈ [0, 1], but each agent first "
-            "shields a personal fraction `λi`, `λj` of their wealth (their savings rate). "
-            "Setting all λ to a common value yields a Gamma stationary distribution whose shape "
-            "parameter is `1 + 3λ/(1-λ)` (Chakraborti & Chakrabarti 2000). Allowing λ to vary "
-            "across agents collapses the high-end to a Pareto-tailed distribution with exponent "
-            "≈ 2 (Chatterjee, Chakrabarti & Manna 2004) — exactly the regime econophysicists "
-            "use to argue that **inequality is driven more by savings heterogeneity than by "
-            "rapacity**."
+            "wealth `wi + wj` according to a uniform draw eps in [0, 1], but each agent first "
+            "shields a personal fraction `lambda_i`, `lambda_j` of their wealth (their savings "
+            "rate). Setting all lambda to a common value yields a Gamma stationary distribution "
+            "whose shape parameter is `1 + 3 lambda / (1 - lambda)` (Chakraborti & Chakrabarti "
+            "2000). Allowing lambda to vary across agents collapses the high-end to a "
+            "Pareto-tailed distribution with exponent ~ 2 (Chatterjee, Chakrabarti & Manna 2004) "
+            "— exactly the regime econophysicists use to argue that **inequality is driven more "
+            "by savings heterogeneity than by rapacity**."
         ),
         references_title="Seminal papers and further reading",
         references=(
             Reference(
                 citation="Chakraborti & Chakrabarti (2000)",
-                title=("Statistical mechanics of money: how saving propensity affects its distribution"),
+                title="Statistical mechanics of money: how saving propensity affects its distribution",
                 venue="European Physical Journal B, 17(1), 167-170",
                 url="https://doi.org/10.1007/s100510070173",
             ),
             Reference(
                 citation="Chatterjee, Chakrabarti & Manna (2004)",
-                title=("Pareto law in a kinetic model of market with random saving propensity"),
+                title="Pareto law in a kinetic model of market with random saving propensity",
                 venue="Physica A, 335(1-2), 155-163",
                 url="https://doi.org/10.1016/j.physa.2003.11.014",
             ),
             Reference(
                 citation="Patriarca, Chakraborti & Kaski (2004)",
-                title=("Statistical model with a standard Gamma distribution"),
+                title="Statistical model with a standard Gamma distribution",
                 venue="Physical Review E, 70, 016104",
                 url="https://doi.org/10.1103/PhysRevE.70.016104",
             ),
@@ -143,13 +141,13 @@ KINETIC_COPY = FeatureCopy(
         expander_title="How to read this chart",
         how_to_read=(
             "Every dot is one agent at the end of one replicate. The x-axis "
-            "is that agent's individual saving propensity λ (how much wealth "
-            "they shield in each pairwise exchange); the y-axis is their "
-            "final wealth. The thicker line is a rolling mean of final wealth "
-            "binned by λ."
+            "is that agent's individual saving propensity lambda (how much "
+            "wealth they shield in each pairwise exchange); the y-axis is "
+            "their final wealth. The thicker line is a rolling mean of final "
+            "wealth binned by lambda."
         ),
         what_it_means=(
-            "If the rolling mean rises sharply with λ, **frugality is "
+            "If the rolling mean rises sharply with lambda, **frugality is "
             "rewarded** — the same lesson Chatterjee, Chakrabarti & Manna "
             "drew when they showed that quenched-disorder savings rates "
             "generate the Pareto tail. A flat rolling mean would mean the "
@@ -160,12 +158,10 @@ KINETIC_COPY = FeatureCopy(
     ),
 )
 
+
 KINETIC_SPECIAL_HEADING = SavingsWealthHeading(
     title="Final wealth vs saving propensity (with rolling mean)",
-    x_label="Saving propensity λ",
+    x_label="Saving propensity lambda",
     y_label="Final wealth",
     rolling_label="Rolling-mean wealth",
 )
-
-
-__all__ = ["KINETIC_COPY", "KINETIC_SPECIAL_HEADING"]

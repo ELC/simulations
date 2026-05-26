@@ -51,7 +51,8 @@ def test_build_site_writes_package_layout(
         for path in (
             app_entrypoint,
             "stlite_hello/features/yard_sale/model.py",
-            "stlite_hello/features/yard_sale/page.py",
+            "stlite_hello/features/yard_sale/simulation.py",
+            "stlite_hello/features/yard_sale/presentation/page.py",
             "stlite_hello/features/yard_sale/presentation/controller.py",
             "stlite_hello/presentation/sections.py",
         )
@@ -87,8 +88,9 @@ def test_index_html_mounts_every_package_file(
         "stlite_hello/features/__init__.py",
         "stlite_hello/features/yard_sale/__init__.py",
         "stlite_hello/features/yard_sale/model.py",
-        "stlite_hello/features/yard_sale/page.py",
+        "stlite_hello/features/yard_sale/simulation.py",
         "stlite_hello/features/yard_sale/presentation/__init__.py",
+        "stlite_hello/features/yard_sale/presentation/page.py",
         "stlite_hello/features/yard_sale/presentation/controller.py",
         "stlite_hello/presentation/__init__.py",
         "stlite_hello/presentation/sections.py",

@@ -1,25 +1,24 @@
-"""Pyodide compatibility shim for pandera 0.31.
-
-Stlite intentionally replaces Pyodide's bundled pyarrow with a tiny mock
-package (``Table``/``Array``/``ChunkedArray`` stubs only) via micropip's
-``add_mock_package`` to keep page weight down. Pandera 0.31 doesn't know that:
-its ``engines/pandas_engine.py`` does ``try: import pyarrow; PYARROW_INSTALLED
-= True`` at line 46 and then runs an arrow-typed registration block at line
-1613 that calls ``pyarrow.bool_()``, ``pyarrow.int8()``, and friends. None of
-those exist on Stlite's mock, so pandera's import explodes before stlite_hello
-can even start.
-
-We can't enrich the mock pyarrow because Stlite owns it, and we can't replace
-it because Streamlit's runtime DataFrame-to-arrow path expects the same mock to
-be importable. Instead we trick pandera into thinking pyarrow isn't installed:
-we temporarily set ``sys.modules["pyarrow"] = None`` so ``import pyarrow``
-raises ``ImportError``, eagerly import pandera (which sets ``PYARROW_INSTALLED
-= False`` and skips the arrow block), then restore the mock so Streamlit's
-later imports get the mock back as Stlite intends.
-
-Outside Pyodide (local dev, CI) we never touch ``sys.modules`` and pandera
-imports against the real pyarrow normally.
-"""
+# Pyodide compatibility shim for pandera 0.31.
+#
+# Stlite replaces Pyodide's bundled pyarrow with a tiny mock package
+# (``Table``/``Array``/``ChunkedArray`` stubs only) via micropip's
+# ``add_mock_package`` to keep page weight down. Pandera 0.31 doesn't know
+# that: its ``engines/pandas_engine.py`` does ``try: import pyarrow;
+# PYARROW_INSTALLED = True`` and then runs an arrow-typed registration block
+# that calls ``pyarrow.bool_()``, ``pyarrow.int8()``, and friends. None of
+# those exist on Stlite's mock, so pandera's import explodes before
+# stlite_hello can even start.
+#
+# We can't enrich the mock pyarrow because Stlite owns it, and we can't
+# replace it because Streamlit's runtime DataFrame-to-arrow path expects the
+# same mock to be importable. Instead we trick pandera into thinking pyarrow
+# isn't installed: we temporarily set ``sys.modules["pyarrow"] = None`` so
+# ``import pyarrow`` raises ``ImportError``, eagerly import pandera (which
+# sets ``PYARROW_INSTALLED = False`` and skips the arrow block), then restore
+# the mock so Streamlit's later imports get the mock back as Stlite intends.
+#
+# Outside Pyodide (local dev, CI) we never touch ``sys.modules`` and pandera
+# imports against the real pyarrow normally.
 
 import sys
 from collections.abc import MutableMapping

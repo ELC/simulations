@@ -1,7 +1,5 @@
-"""Frozen view-model singletons holding Cournot UI text."""
-
 from stlite_hello.analysis import ChartHeading, DecileHeatmapHeading, KdeFitsHeading
-from stlite_hello.presentation import (
+from stlite_hello.view_models import (
     DEFAULT_CHART_EXPLAINERS,
     DEFAULT_RUN_CONTROL_LABELS,
     AdvancedToggleLabels,
@@ -17,7 +15,7 @@ from stlite_hello.presentation import (
     SeedSliderLabels,
 )
 
-from .special_chart import BestResponseHeading
+from .charts import BestResponseHeading
 
 COURNOT_COPY = FeatureCopy(
     page_header=PageHeader(
@@ -55,7 +53,7 @@ COURNOT_COPY = FeatureCopy(
         references=(
             Reference(
                 citation="Cournot (1838)",
-                title=("Recherches sur les principes mathématiques de la théorie des richesses"),
+                title="Recherches sur les principes mathématiques de la théorie des richesses",
                 venue="Hachette, Paris (English translation: Macmillan, 1897)",
                 url="https://archive.org/details/researchesintom00fishgoog",
             ),
@@ -155,12 +153,10 @@ COURNOT_COPY = FeatureCopy(
     ),
 )
 
+
 COURNOT_SPECIAL_HEADING = BestResponseHeading(
     title="Best-response iterates and analytic lines",
     x_label="Firm A quantity",
     y_label="Firm B quantity",
     line_legend_label="Best response",
 )
-
-
-__all__ = ["COURNOT_COPY", "COURNOT_SPECIAL_HEADING"]

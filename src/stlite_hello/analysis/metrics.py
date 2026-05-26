@@ -1,11 +1,3 @@
-"""Cross-model concentration and mobility metrics.
-
-All functions operate on numpy arrays so they can be wrapped with
-``scipy.stats.bootstrap`` for CIs. Public helpers (``lorenz_curve``,
-``decile_transition_matrix``, ``top_pct_spells``) return Pandera-validated
-dataframes so the rest of the analysis layer never touches raw pandas.
-"""
-
 from typing import cast
 
 import numpy as np
@@ -315,22 +307,3 @@ def decile_transition_matrix(panel: NDArray[np.float64]) -> DataFrame[DecileTran
         },
     )
     return DataFrame[DecileTransition](frame)
-
-
-__all__ = [
-    "bottom_to_top_rise_count",
-    "coefficient_of_variation",
-    "convergence_half_life",
-    "decile_transition_matrix",
-    "gini",
-    "hill_alpha",
-    "lorenz_curve",
-    "mean_tenure_from_spells",
-    "median_time_to_rise",
-    "shannon_entropy",
-    "top_pct_persistence_rate",
-    "top_pct_spells",
-    "top_pct_turnover_per_step",
-    "top_pct_turnover_rate",
-    "top_share",
-]

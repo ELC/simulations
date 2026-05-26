@@ -1,7 +1,5 @@
-"""Frozen view-model singletons holding Double Auction UI text."""
-
 from stlite_hello.analysis import ChartHeading, DecileHeatmapHeading, KdeFitsHeading
-from stlite_hello.presentation import (
+from stlite_hello.view_models import (
     DEFAULT_CHART_EXPLAINERS,
     DEFAULT_RUN_CONTROL_LABELS,
     AdvancedToggleLabels,
@@ -17,7 +15,7 @@ from stlite_hello.presentation import (
     SeedSliderLabels,
 )
 
-from .special_chart import SupplyDemandHeading
+from .charts import SupplyDemandHeading
 
 DOUBLE_AUCTION_COPY = FeatureCopy(
     page_header=PageHeader(
@@ -81,7 +79,7 @@ DOUBLE_AUCTION_COPY = FeatureCopy(
             ),
             Reference(
                 citation="Cliff & Bruten (1997)",
-                title=("Minimal-intelligence agents for bargaining behaviours in market-based environments"),
+                title="Minimal-intelligence agents for bargaining behaviours in market-based environments",
                 venue="HP Laboratories Technical Report HPL-97-91",
                 url="https://www.hpl.hp.com/techreports/97/HPL-97-91.html",
             ),
@@ -165,12 +163,10 @@ DOUBLE_AUCTION_COPY = FeatureCopy(
     ),
 )
 
+
 DOUBLE_AUCTION_SPECIAL_HEADING = SupplyDemandHeading(
     title="Final-round supply and demand curves",
     x_label="Quantity",
     y_label="Price",
     clearing_label="Clearing price",
 )
-
-
-__all__ = ["DOUBLE_AUCTION_COPY", "DOUBLE_AUCTION_SPECIAL_HEADING"]

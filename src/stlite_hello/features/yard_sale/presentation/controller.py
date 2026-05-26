@@ -1,5 +1,3 @@
-"""Orchestrator: sidebar -> gated run -> sections, all typed."""
-
 import streamlit as st
 
 from stlite_hello.analysis import (
@@ -8,13 +6,28 @@ from stlite_hello.analysis import (
     run_replicates,
     summarize,
 )
-from stlite_hello.features.yard_sale.model import YARD_SALE_FEATURE, YardSaleConfig, simulate_once
-from stlite_hello.presentation import RunControlInputs, render_run_control
+from stlite_hello.features.yard_sale.model import YARD_SALE_FEATURE, YardSaleConfig
+from stlite_hello.features.yard_sale.simulation import simulate_once
+from stlite_hello.features.yard_sale.view_models import (
+    YARD_SALE_COPY,
+    YARD_SALE_SPECIAL_HEADING,
+)
+from stlite_hello.presentation import (
+    render_aic_ranking,
+    render_decile_transitions,
+    render_example_callout,
+    render_kde_and_fits,
+    render_lorenz,
+    render_metric_trajectories,
+    render_metrics_table,
+    render_page_header,
+    render_run_control,
+    render_special_chart_explainer,
+)
+from stlite_hello.view_models import RunControlInputs
 
-from . import sections
 from .sidebar import SidebarInputs, build_config
 from .special_chart import SpecialChartInputs, render_special_chart
-from .view_models import YARD_SALE_COPY, YARD_SALE_SPECIAL_HEADING
 
 
 def _run(config: YardSaleConfig) -> RunBundle:
@@ -30,10 +43,9 @@ def _summarize(*, config: YardSaleConfig, bundle: RunBundle) -> SimulationReport
 
 
 def render() -> None:
-    """Render the Yard-Sale page end-to-end."""
     copy = YARD_SALE_COPY
-    sections.render_page_header(copy.page_header)
-    sections.render_example_callout(copy.example)
+    render_page_header(copy.page_header)
+    render_example_callout(copy.example)
     defaults = YardSaleConfig()
     config = build_config(SidebarInputs(defaults=defaults))
     outcome = render_run_control(
@@ -53,28 +65,25 @@ def render() -> None:
     report = outcome.report
     headings = copy.headings
     explainers = copy.explainers
-    sections.render_metrics_table(report.metrics_ci, headings.metrics_table, explainers.metrics_table)
-    sections.render_metric_trajectories(
+    render_metrics_table(report.metrics_ci, headings.metrics_table, explainers.metrics_table)
+    render_metric_trajectories(
         report.metrics_ci_over_time,
         headings.metric_trajectories,
         explainers.metric_trajectories,
     )
-    sections.render_lorenz(report.lorenz, headings.lorenz, explainers.lorenz)
-    sections.render_kde_and_fits(
+    render_lorenz(report.lorenz, headings.lorenz, explainers.lorenz)
+    render_kde_and_fits(
         report.kde,
         report.fitted_densities,
         headings.kde_fits,
         explainers.kde_fits,
     )
-    sections.render_aic_ranking(report.fits, headings.aic_ranking, explainers.aic_ranking)
-    sections.render_decile_transitions(
+    render_aic_ranking(report.fits, headings.aic_ranking, explainers.aic_ranking)
+    render_decile_transitions(
         report.decile_transitions,
         headings.decile_transitions,
         explainers.decile_transitions,
     )
     st.subheader(copy.special_chart_title)
     render_special_chart(SpecialChartInputs(bundle=bundle, heading=YARD_SALE_SPECIAL_HEADING))
-    sections.render_special_chart_explainer(copy.special_chart_explainer)
-
-
-__all__ = ["render"]
+    render_special_chart_explainer(copy.special_chart_explainer)

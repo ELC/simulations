@@ -1,7 +1,10 @@
-"""Labor search-and-matching simulation slice."""
-
 import streamlit as st
 
+from .charts import (
+    BeveridgeHeading,
+    build_beveridge_chart,
+    build_beveridge_frame,
+)
 from .model import (
     LABOR_MATCHING_DEFAULT_ALPHA,
     LABOR_MATCHING_DEFAULT_INITIAL_EMPLOYMENT,
@@ -18,21 +21,18 @@ from .model import (
     LaborMarketHistory,
     LaborMatchingConfig,
     SimpleParams,
-    labor_market_history,
-    simulate_once,
 )
-from .page import pages
 from .presentation import (
-    LABOR_MATCHING_COPY,
-    LABOR_MATCHING_SPECIAL_HEADING,
-    BeveridgeData,
-    BeveridgeHeading,
+    SidebarInputs,
     SpecialChartInputs,
-    build_beveridge_chart,
-    build_beveridge_frame,
+    build_config,
+    pages,
     render,
     render_special_chart,
 )
+from .schemas import BeveridgeData
+from .simulation import labor_market_history, simulate_once
+from .view_models import LABOR_MATCHING_COPY, LABOR_MATCHING_SPECIAL_HEADING
 
 
 def main() -> None:
@@ -60,10 +60,12 @@ __all__ = [
     "BeveridgeHeading",
     "LaborMarketHistory",
     "LaborMatchingConfig",
+    "SidebarInputs",
     "SimpleParams",
     "SpecialChartInputs",
     "build_beveridge_chart",
     "build_beveridge_frame",
+    "build_config",
     "labor_market_history",
     "main",
     "pages",

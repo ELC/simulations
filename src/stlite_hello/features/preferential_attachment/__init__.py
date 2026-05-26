@@ -1,7 +1,10 @@
-"""Preferential attachment growth simulation slice."""
-
 import streamlit as st
 
+from .charts import (
+    ZipfHeading,
+    build_zipf_chart,
+    build_zipf_frame,
+)
 from .model import (
     PREFERENTIAL_ATTACHMENT_DEFAULT_ATTACHMENTS,
     PREFERENTIAL_ATTACHMENT_DEFAULT_INITIAL_CLIQUE,
@@ -11,20 +14,20 @@ from .model import (
     AdvancedParams,
     PreferentialAttachmentConfig,
     SimpleParams,
-    final_graph,
-    simulate_once,
 )
-from .page import pages
 from .presentation import (
-    PREFERENTIAL_ATTACHMENT_COPY,
-    PREFERENTIAL_ATTACHMENT_SPECIAL_HEADING,
+    SidebarInputs,
     SpecialChartInputs,
-    ZipfData,
-    ZipfHeading,
-    build_zipf_chart,
-    build_zipf_frame,
+    build_config,
+    pages,
     render,
     render_special_chart,
+)
+from .schemas import ZipfData
+from .simulation import final_graph, simulate_once
+from .view_models import (
+    PREFERENTIAL_ATTACHMENT_COPY,
+    PREFERENTIAL_ATTACHMENT_SPECIAL_HEADING,
 )
 
 
@@ -44,10 +47,12 @@ __all__ = [
     "PREFERENTIAL_ATTACHMENT_SPECIAL_HEADING",
     "AdvancedParams",
     "PreferentialAttachmentConfig",
+    "SidebarInputs",
     "SimpleParams",
     "SpecialChartInputs",
     "ZipfData",
     "ZipfHeading",
+    "build_config",
     "build_zipf_chart",
     "build_zipf_frame",
     "final_graph",

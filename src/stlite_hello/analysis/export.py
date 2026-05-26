@@ -1,11 +1,3 @@
-"""Versioned JSON export of a complete simulation run.
-
-The export is round-trippable: ``deserialize_run(serialize_run(...))`` parses
-back to the same :class:`SimulationRunExport`, and a second
-``serialize_run`` yields byte-identical output. The schema is pinned via
-``schema_version`` so future evolution stays explicit.
-"""
-
 from datetime import UTC, datetime, timedelta
 from typing import Any, Literal
 
@@ -214,14 +206,3 @@ def export_filename(*, feature: str, config: AggregationConfig) -> str:
         e.g. ``yard_sale_seed-1000003_runs-30.json``.
     """
     return f"{feature}_seed-{config.seed}_runs-{config.runs}.json"
-
-
-__all__ = [
-    "SerializedBundle",
-    "SerializedReport",
-    "SimulationRunExport",
-    "build_export",
-    "deserialize_run",
-    "export_filename",
-    "serialize_run",
-]

@@ -1,7 +1,5 @@
-"""Frozen view-model singletons holding preferential-attachment UI text."""
-
 from stlite_hello.analysis import ChartHeading, DecileHeatmapHeading, KdeFitsHeading
-from stlite_hello.presentation import (
+from stlite_hello.view_models import (
     DEFAULT_CHART_EXPLAINERS,
     DEFAULT_RUN_CONTROL_LABELS,
     AdvancedToggleLabels,
@@ -17,7 +15,7 @@ from stlite_hello.presentation import (
     SeedSliderLabels,
 )
 
-from .special_chart import ZipfHeading
+from .charts import ZipfHeading
 
 PREFERENTIAL_ATTACHMENT_COPY = FeatureCopy(
     page_header=PageHeader(
@@ -34,7 +32,7 @@ PREFERENTIAL_ATTACHMENT_COPY = FeatureCopy(
         summary=(
             "When a PhD student writes the literature review of a new paper on, say, "
             "transformer attention, they overwhelmingly cite the handful of canonical "
-            "papers everyone already cites (Vaswani 2017, Devlin 2018, …) rather than "
+            "papers everyone already cites (Vaswani 2017, Devlin 2018, ...) rather than "
             "trawling arXiv for obscure but relevant work. Multiply that behaviour over "
             "millions of submissions across decades and you get the empirical shape that "
             "**~80% of citations accrue to ~20% of papers**, with a long tail of "
@@ -64,7 +62,7 @@ PREFERENTIAL_ATTACHMENT_COPY = FeatureCopy(
             ),
             Reference(
                 citation="Price (1976)",
-                title=("A general theory of bibliometric and other cumulative advantage processes"),
+                title="A general theory of bibliometric and other cumulative advantage processes",
                 venue="Journal of the American Society for Information Science, 27(5), 292-306",
                 url="https://doi.org/10.1002/asi.4630270505",
             ),
@@ -160,11 +158,9 @@ PREFERENTIAL_ATTACHMENT_COPY = FeatureCopy(
     ),
 )
 
+
 PREFERENTIAL_ATTACHMENT_SPECIAL_HEADING = ZipfHeading(
     title="Degree vs rank on log-log axes",
     x_label="Rank (log)",
     y_label="Degree (log)",
 )
-
-
-__all__ = ["PREFERENTIAL_ATTACHMENT_COPY", "PREFERENTIAL_ATTACHMENT_SPECIAL_HEADING"]

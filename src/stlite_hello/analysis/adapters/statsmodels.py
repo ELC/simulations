@@ -1,8 +1,3 @@
-"""Narrow, typed wrappers around the ``statsmodels`` surface we use.
-
-The only place in the codebase that may import :mod:`statsmodels`.
-"""
-
 import numpy as np
 from numpy.typing import NDArray
 from pydantic import BaseModel, ConfigDict, Field

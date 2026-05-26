@@ -1,7 +1,10 @@
-"""Sugarscape simulation slice."""
-
 import streamlit as st
 
+from .charts import (
+    SpatialHeading,
+    build_spatial_chart,
+    build_spatial_frames,
+)
 from .model import (
     SUGARSCAPE_DEFAULT_AGENTS,
     SUGARSCAPE_DEFAULT_GRID,
@@ -16,22 +19,18 @@ from .model import (
     SimpleParams,
     SpatialSnapshot,
     SugarscapeConfig,
-    final_snapshot,
-    simulate_once,
 )
-from .page import pages
 from .presentation import (
-    SUGARSCAPE_COPY,
-    SUGARSCAPE_SPECIAL_HEADING,
-    AgentLocationData,
-    SpatialCellData,
-    SpatialHeading,
+    SidebarInputs,
     SpecialChartInputs,
-    build_spatial_chart,
-    build_spatial_frames,
+    build_config,
+    pages,
     render,
     render_special_chart,
 )
+from .schemas import AgentLocationData, SpatialCellData
+from .simulation import final_snapshot, simulate_once
+from .view_models import SUGARSCAPE_COPY, SUGARSCAPE_SPECIAL_HEADING
 
 
 def main() -> None:
@@ -54,12 +53,14 @@ __all__ = [
     "SUGARSCAPE_SPECIAL_HEADING",
     "AdvancedParams",
     "AgentLocationData",
+    "SidebarInputs",
     "SimpleParams",
     "SpatialCellData",
     "SpatialHeading",
     "SpatialSnapshot",
     "SpecialChartInputs",
     "SugarscapeConfig",
+    "build_config",
     "build_spatial_chart",
     "build_spatial_frames",
     "final_snapshot",

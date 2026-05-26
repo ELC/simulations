@@ -1,5 +1,3 @@
-"""Orchestrator: sidebar -> gated run -> sections, all typed."""
-
 from typing import TYPE_CHECKING, cast
 
 import streamlit as st
@@ -13,14 +11,28 @@ from stlite_hello.analysis import (
 from stlite_hello.features.double_auction.model import (
     DOUBLE_AUCTION_FEATURE,
     DoubleAuctionConfig,
-    simulate_once,
 )
-from stlite_hello.presentation import RunControlInputs, render_run_control
+from stlite_hello.features.double_auction.simulation import simulate_once
+from stlite_hello.features.double_auction.view_models import (
+    DOUBLE_AUCTION_COPY,
+    DOUBLE_AUCTION_SPECIAL_HEADING,
+)
+from stlite_hello.presentation import (
+    render_aic_ranking,
+    render_decile_transitions,
+    render_example_callout,
+    render_kde_and_fits,
+    render_lorenz,
+    render_metric_trajectories,
+    render_metrics_table,
+    render_page_header,
+    render_run_control,
+    render_special_chart_explainer,
+)
+from stlite_hello.view_models import RunControlInputs
 
-from . import sections
 from .sidebar import SidebarInputs, build_config
 from .special_chart import SpecialChartInputs, render_special_chart
-from .view_models import DOUBLE_AUCTION_COPY, DOUBLE_AUCTION_SPECIAL_HEADING
 
 if TYPE_CHECKING:
     from stlite_hello.features.double_auction.model import AdvancedParams
@@ -39,10 +51,9 @@ def _summarize(*, config: DoubleAuctionConfig, bundle: RunBundle) -> SimulationR
 
 
 def render() -> None:
-    """Render the Double Auction page end-to-end."""
     copy = DOUBLE_AUCTION_COPY
-    sections.render_page_header(copy.page_header)
-    sections.render_example_callout(copy.example)
+    render_page_header(copy.page_header)
+    render_example_callout(copy.example)
     defaults = DoubleAuctionConfig()
     config = build_config(SidebarInputs(defaults=defaults))
     outcome = render_run_control(
@@ -61,21 +72,21 @@ def render() -> None:
     report = outcome.report
     headings = copy.headings
     explainers = copy.explainers
-    sections.render_metrics_table(report.metrics_ci, headings.metrics_table, explainers.metrics_table)
-    sections.render_metric_trajectories(
+    render_metrics_table(report.metrics_ci, headings.metrics_table, explainers.metrics_table)
+    render_metric_trajectories(
         report.metrics_ci_over_time,
         headings.metric_trajectories,
         explainers.metric_trajectories,
     )
-    sections.render_lorenz(report.lorenz, headings.lorenz, explainers.lorenz)
-    sections.render_kde_and_fits(
+    render_lorenz(report.lorenz, headings.lorenz, explainers.lorenz)
+    render_kde_and_fits(
         report.kde,
         report.fitted_densities,
         headings.kde_fits,
         explainers.kde_fits,
     )
-    sections.render_aic_ranking(report.fits, headings.aic_ranking, explainers.aic_ranking)
-    sections.render_decile_transitions(
+    render_aic_ranking(report.fits, headings.aic_ranking, explainers.aic_ranking)
+    render_decile_transitions(
         report.decile_transitions,
         headings.decile_transitions,
         explainers.decile_transitions,
@@ -88,7 +99,4 @@ def render() -> None:
             heading=DOUBLE_AUCTION_SPECIAL_HEADING,
         ),
     )
-    sections.render_special_chart_explainer(copy.special_chart_explainer)
-
-
-__all__ = ["render"]
+    render_special_chart_explainer(copy.special_chart_explainer)

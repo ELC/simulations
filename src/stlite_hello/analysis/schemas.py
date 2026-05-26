@@ -1,10 +1,3 @@
-"""Pandera DataFrame schemas for the analysis core.
-
-Every dataframe handed across the public API of :mod:`stlite_hello.analysis`
-is validated against one of these models. They are the only acceptable
-``DataFrame[...]`` shapes; raw ``pd.DataFrame`` is never exposed.
-"""
-
 import pandera.pandas as pa
 
 
@@ -106,18 +99,3 @@ class TopPctSpell(pa.DataFrameModel):
     spell: int = pa.Field(ge=0)
     duration: int = pa.Field(ge=1)
     censored: bool
-
-
-__all__ = [
-    "DecileTransition",
-    "DistributionFit",
-    "FinalPopulation",
-    "FittedDensity",
-    "FocalPanel",
-    "KDECurve",
-    "LorenzCurve",
-    "MetricCI",
-    "MetricCIOverTime",
-    "ReplicateLong",
-    "TopPctSpell",
-]

@@ -1,7 +1,10 @@
-"""Cournot oligopoly simulation slice."""
-
 import streamlit as st
 
+from .charts import (
+    BestResponseHeading,
+    build_best_response_chart,
+    build_trajectory_data,
+)
 from .model import (
     COURNOT_DEFAULT_COST_MEAN,
     COURNOT_DEFAULT_COST_SPREAD,
@@ -15,23 +18,18 @@ from .model import (
     AdvancedParams,
     CournotConfig,
     SimpleParams,
-    costs_for_seed,
-    quantity_trajectory,
-    simulate_once,
 )
-from .page import pages
 from .presentation import (
-    COURNOT_COPY,
-    COURNOT_SPECIAL_HEADING,
-    BestResponseHeading,
-    BestResponseLinesData,
-    BestResponseTrajectoryData,
+    SidebarInputs,
     SpecialChartInputs,
-    build_best_response_chart,
-    build_trajectory_data,
+    build_config,
+    pages,
     render,
     render_special_chart,
 )
+from .schemas import BestResponseLinesData, BestResponseTrajectoryData
+from .simulation import costs_for_seed, quantity_trajectory, simulate_once
+from .view_models import COURNOT_COPY, COURNOT_SPECIAL_HEADING
 
 
 def main() -> None:
@@ -57,9 +55,11 @@ __all__ = [
     "BestResponseLinesData",
     "BestResponseTrajectoryData",
     "CournotConfig",
+    "SidebarInputs",
     "SimpleParams",
     "SpecialChartInputs",
     "build_best_response_chart",
+    "build_config",
     "build_trajectory_data",
     "costs_for_seed",
     "main",

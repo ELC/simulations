@@ -1,5 +1,3 @@
-"""Turn a ``RunBundle`` into the typed ``SimulationReport`` consumed by the UI."""
-
 import json
 import operator
 from collections.abc import Callable
@@ -463,6 +461,3 @@ def summarize(*, bundle: RunBundle, config: AggregationConfig) -> SimulationRepo
         decile_transitions=_build_decile_transitions(panels_per_run),
         top_pct_spells=_build_pooled_spells(panels_per_run),
     )
-
-
-__all__ = ["SimulationReport", "summarize"]

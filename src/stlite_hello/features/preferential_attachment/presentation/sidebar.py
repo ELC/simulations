@@ -1,5 +1,3 @@
-"""Sidebar: turn user input into a frozen :class:`PreferentialAttachmentConfig`."""
-
 from typing import Literal
 
 import streamlit as st
@@ -11,14 +9,15 @@ from stlite_hello.features.preferential_attachment.model import (
     PreferentialAttachmentConfig,
     SimpleParams,
 )
-from stlite_hello.presentation import (
+from stlite_hello.features.preferential_attachment.view_models import (
+    PREFERENTIAL_ATTACHMENT_COPY,
+)
+from stlite_hello.presentation import build_aggregation_config
+from stlite_hello.view_models import (
     AdvancedToggleLabels,
     AggregationSidebarInputs,
     SeedSliderLabels,
-    build_aggregation_config,
 )
-
-from .view_models import PREFERENTIAL_ATTACHMENT_COPY
 
 _KEY_PREFIX = "preferential_attachment"
 
@@ -104,13 +103,6 @@ class SidebarInputs(BaseModel):
 
 
 def build_config(inputs: SidebarInputs) -> PreferentialAttachmentConfig:
-    """Render the sidebar and return a frozen :class:`PreferentialAttachmentConfig`.
-
-    Returns
-    -------
-    PreferentialAttachmentConfig
-        Fully validated config; no primitives in the public signature.
-    """
     defaults = inputs.defaults
     sidebar_params = _render_params(defaults.params, PREFERENTIAL_ATTACHMENT_COPY.view_toggle)
     seed = _render_seed(PREFERENTIAL_ATTACHMENT_COPY.seed, defaults.seed)
@@ -137,6 +129,3 @@ def build_config(inputs: SidebarInputs) -> PreferentialAttachmentConfig:
         bootstrap_method=aggregation.bootstrap_method,
         params=sidebar_params.params,
     )
-
-
-__all__ = ["SidebarInputs", "build_config"]

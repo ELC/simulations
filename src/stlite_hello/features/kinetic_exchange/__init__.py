@@ -1,7 +1,10 @@
-"""Kinetic wealth-exchange (Chakraborti-Chakrabarti) simulation slice."""
-
 import streamlit as st
 
+from .charts import (
+    SavingsWealthHeading,
+    build_savings_wealth_chart,
+    build_savings_wealth_panel,
+)
 from .model import (
     KINETIC_DEFAULT_AGENTS,
     KINETIC_DEFAULT_INITIAL_WEALTH,
@@ -13,21 +16,18 @@ from .model import (
     AdvancedParams,
     KineticExchangeConfig,
     SimpleParams,
-    savings_per_agent,
-    simulate_once,
 )
-from .page import pages
 from .presentation import (
-    KINETIC_COPY,
-    KINETIC_SPECIAL_HEADING,
-    SavingsWealthData,
-    SavingsWealthHeading,
+    SidebarInputs,
     SpecialChartInputs,
-    build_savings_wealth_chart,
-    build_savings_wealth_panel,
+    build_config,
+    pages,
     render,
     render_special_chart,
 )
+from .schemas import SavingsWealthData
+from .simulation import savings_per_agent, simulate_once
+from .view_models import KINETIC_COPY, KINETIC_SPECIAL_HEADING
 
 
 def main() -> None:
@@ -50,8 +50,10 @@ __all__ = [
     "KineticExchangeConfig",
     "SavingsWealthData",
     "SavingsWealthHeading",
+    "SidebarInputs",
     "SimpleParams",
     "SpecialChartInputs",
+    "build_config",
     "build_savings_wealth_chart",
     "build_savings_wealth_panel",
     "main",

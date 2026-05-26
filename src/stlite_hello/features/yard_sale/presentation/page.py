@@ -1,9 +1,7 @@
-"""Streamlit page wiring for the Yard-Sale simulation."""
-
 import streamlit as st
 from streamlit.navigation.page import StreamlitPage
 
-from .presentation import render
+from .controller import render
 
 
 def pages() -> list[StreamlitPage]:
@@ -15,6 +13,3 @@ def pages() -> list[StreamlitPage]:
             url_path="yard_sale",
         ),
     ]
-
-
-__all__ = ["pages"]

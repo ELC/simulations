@@ -1,7 +1,5 @@
-"""Frozen view-model singletons holding Sugarscape UI text."""
-
 from stlite_hello.analysis import ChartHeading, DecileHeatmapHeading, KdeFitsHeading
-from stlite_hello.presentation import (
+from stlite_hello.view_models import (
     DEFAULT_CHART_EXPLAINERS,
     DEFAULT_RUN_CONTROL_LABELS,
     AdvancedToggleLabels,
@@ -17,7 +15,7 @@ from stlite_hello.presentation import (
     SeedSliderLabels,
 )
 
-from .special_chart import SpatialHeading
+from .charts import SpatialHeading
 
 SUGARSCAPE_COPY = FeatureCopy(
     page_header=PageHeader(
@@ -73,7 +71,7 @@ SUGARSCAPE_COPY = FeatureCopy(
             ),
             Reference(
                 citation="Bonabeau (2002)",
-                title=("Agent-based modeling: methods and techniques for simulating human systems"),
+                title="Agent-based modeling: methods and techniques for simulating human systems",
                 venue="Proceedings of the National Academy of Sciences, 99(suppl. 3), 7280-7287",
                 url="https://doi.org/10.1073/pnas.082080899",
             ),
@@ -162,6 +160,7 @@ SUGARSCAPE_COPY = FeatureCopy(
     ),
 )
 
+
 SUGARSCAPE_SPECIAL_HEADING = SpatialHeading(
     title="Final sugar landscape and agent wealth",
     row_label="Row",
@@ -169,6 +168,3 @@ SUGARSCAPE_SPECIAL_HEADING = SpatialHeading(
     sugar_label="Remaining sugar",
     agent_label="Agent wealth",
 )
-
-
-__all__ = ["SUGARSCAPE_COPY", "SUGARSCAPE_SPECIAL_HEADING"]

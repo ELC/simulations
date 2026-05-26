@@ -1,9 +1,3 @@
-"""Narrow, typed wrappers around the small ``scipy.stats`` surface we use.
-
-This module is the **only** place in the codebase that may import
-:mod:`scipy`. Callers consume the typed Pydantic models exposed below.
-"""
-
 from collections.abc import Callable, Sequence
 from typing import Literal, Protocol, cast
 

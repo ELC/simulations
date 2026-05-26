@@ -1,5 +1,3 @@
-"""Sidebar: turn user input into a frozen :class:`SugarscapeConfig`."""
-
 from typing import Literal
 
 import streamlit as st
@@ -7,14 +5,13 @@ from pydantic import BaseModel, ConfigDict
 
 from stlite_hello.analysis import AggregationConfig
 from stlite_hello.features.sugarscape.model import AdvancedParams, SimpleParams, SugarscapeConfig
-from stlite_hello.presentation import (
+from stlite_hello.features.sugarscape.view_models import SUGARSCAPE_COPY
+from stlite_hello.presentation import build_aggregation_config
+from stlite_hello.view_models import (
     AdvancedToggleLabels,
     AggregationSidebarInputs,
     SeedSliderLabels,
-    build_aggregation_config,
 )
-
-from .view_models import SUGARSCAPE_COPY
 
 _KEY_PREFIX = "sugarscape"
 
@@ -141,13 +138,6 @@ class SidebarInputs(BaseModel):
 
 
 def build_config(inputs: SidebarInputs) -> SugarscapeConfig:
-    """Render the sidebar and return a frozen :class:`SugarscapeConfig`.
-
-    Returns
-    -------
-    SugarscapeConfig
-        Fully validated config; no primitives in the public signature.
-    """
     defaults = inputs.defaults
     sidebar_params = _render_params(defaults.params, SUGARSCAPE_COPY.view_toggle)
     seed = _render_seed(SUGARSCAPE_COPY.seed, defaults.seed)
@@ -174,6 +164,3 @@ def build_config(inputs: SidebarInputs) -> SugarscapeConfig:
         bootstrap_method=aggregation.bootstrap_method,
         params=sidebar_params.params,
     )
-
-
-__all__ = ["SidebarInputs", "build_config"]

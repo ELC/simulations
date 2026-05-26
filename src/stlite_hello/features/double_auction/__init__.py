@@ -1,7 +1,10 @@
-"""Continuous double-auction simulation slice."""
-
 import streamlit as st
 
+from .charts import (
+    SupplyDemandHeading,
+    build_supply_demand_chart,
+    build_supply_demand_frame,
+)
 from .model import (
     DOUBLE_AUCTION_DEFAULT_SEED,
     DOUBLE_AUCTION_DEFAULT_SHADING,
@@ -13,21 +16,18 @@ from .model import (
     DoubleAuctionConfig,
     OrderBookSnapshot,
     SimpleParams,
-    final_orderbook,
-    simulate_once,
 )
-from .page import pages
 from .presentation import (
-    DOUBLE_AUCTION_COPY,
-    DOUBLE_AUCTION_SPECIAL_HEADING,
+    SidebarInputs,
     SpecialChartInputs,
-    SupplyDemandData,
-    SupplyDemandHeading,
-    build_supply_demand_chart,
-    build_supply_demand_frame,
+    build_config,
+    pages,
     render,
     render_special_chart,
 )
+from .schemas import SupplyDemandData
+from .simulation import final_orderbook, simulate_once
+from .view_models import DOUBLE_AUCTION_COPY, DOUBLE_AUCTION_SPECIAL_HEADING
 
 
 def main() -> None:
@@ -48,10 +48,12 @@ __all__ = [
     "AdvancedParams",
     "DoubleAuctionConfig",
     "OrderBookSnapshot",
+    "SidebarInputs",
     "SimpleParams",
     "SpecialChartInputs",
     "SupplyDemandData",
     "SupplyDemandHeading",
+    "build_config",
     "build_supply_demand_chart",
     "build_supply_demand_frame",
     "final_orderbook",

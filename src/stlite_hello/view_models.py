@@ -1,30 +1,124 @@
-"""Frozen view-model BaseModels for UI text and labels."""
+from collections.abc import Callable
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
-from stlite_hello.analysis import ChartHeading, DecileHeatmapHeading, KdeFitsHeading
-
-from .runner import RunControlLabels
-from .sections import (
-    ChartExplainer,
-    DownloadHeading,
-    ExampleCallout,
-    MetricsTableHeading,
-    PageHeader,
+from stlite_hello.analysis import (
+    AggregationConfig,
+    ChartHeading,
+    DecileHeatmapHeading,
+    KdeFitsHeading,
+    RunBundle,
+    SimulationReport,
 )
-from .sidebar import AggregationSidebarLabels
 
-DEFAULT_RUN_CONTROL_LABELS = RunControlLabels(
-    run_button="Run simulation",
-    idle_message="Adjust parameters in the sidebar, then click *Run simulation* to start.",
-    spinner_template="Running {runs} replicates...",
-    elapsed_template="Last run: {runs} replicates in {elapsed:.2f}s.",
-)
+
+class PageHeader(BaseModel):
+    model_config = ConfigDict(frozen=True)
+
+    title: str
+    icon: str
+    caption: str
+
+
+class Reference(BaseModel):
+    model_config = ConfigDict(frozen=True)
+
+    citation: str
+    title: str
+    venue: str
+    url: str
+
+
+class ExampleCallout(BaseModel):
+    """Real-world analogue + seminal-paper references shown above the run toolbar."""
+
+    model_config = ConfigDict(frozen=True)
+
+    headline: str
+    summary: str
+    mechanism: str
+    references_title: str
+    references: tuple[Reference, ...]
+
+
+class MetricsTableHeading(BaseModel):
+    model_config = ConfigDict(frozen=True)
+
+    title: str
+    caption: str
+
+
+class DownloadHeading(BaseModel):
+    model_config = ConfigDict(frozen=True)
+
+    label: str
+    help: str
+    mime: str = "application/json"
+
+
+class ChartExplainer(BaseModel):
+    """How-to-read narrative rendered as a collapsible expander below a chart."""
+
+    model_config = ConfigDict(frozen=True)
+
+    expander_title: str
+    how_to_read: str
+    what_it_means: str
+
+
+class AggregationSidebarLabels(BaseModel):
+    model_config = ConfigDict(frozen=True)
+
+    expander_title: str
+    runs_label: str
+    seed_label: str
+    confidence_label: str
+    bootstrap_resamples_label: str
+    trajectory_samples_label: str
+
+
+class AggregationSidebarInputs(BaseModel):
+    model_config = ConfigDict(frozen=True)
+
+    defaults: AggregationConfig
+    labels: AggregationSidebarLabels
+    key_prefix: str = Field(min_length=1)
+
+
+class RunControlLabels(BaseModel):
+    model_config = ConfigDict(frozen=True)
+
+    run_button: str
+    idle_message: str
+    spinner_template: str
+    elapsed_template: str
+
+
+class SimulationOutcome(BaseModel):
+    """Cached result of one run, replayed on every Streamlit re-render."""
+
+    model_config = ConfigDict(frozen=True, arbitrary_types_allowed=True)
+
+    bundle: RunBundle
+    report: SimulationReport
+    elapsed_seconds: float
+    config: AggregationConfig
+    params: BaseModel
+
+
+class RunControlInputs(BaseModel):
+    model_config = ConfigDict(frozen=True, arbitrary_types_allowed=True)
+
+    feature: str
+    config: AggregationConfig
+    params: BaseModel
+    run: Callable[[], RunBundle]
+    summarize: Callable[[RunBundle], SimulationReport]
+    labels: RunControlLabels
+    download: DownloadHeading
 
 
 class CommonChartHeadings(BaseModel):
-    """Bundle of headings shared by every simulation page."""
-
     model_config = ConfigDict(frozen=True)
 
     metrics_table: MetricsTableHeading
@@ -36,8 +130,6 @@ class CommonChartHeadings(BaseModel):
 
 
 class ChartExplainers(BaseModel):
-    """Bundle of per-chart how-to-read explainers shared by every simulation."""
-
     model_config = ConfigDict(frozen=True)
 
     metrics_table: ChartExplainer
@@ -46,6 +138,45 @@ class ChartExplainers(BaseModel):
     kde_fits: ChartExplainer
     aic_ranking: ChartExplainer
     decile_transitions: ChartExplainer
+
+
+class SeedSliderLabels(BaseModel):
+    model_config = ConfigDict(frozen=True)
+
+    label: str
+    help: str
+
+
+class AdvancedToggleLabels(BaseModel):
+    model_config = ConfigDict(frozen=True)
+
+    label: str
+    simple_option: str
+    advanced_option: str
+
+
+class FeatureCopy(BaseModel):
+    model_config = ConfigDict(frozen=True)
+
+    page_header: PageHeader
+    example: ExampleCallout
+    headings: CommonChartHeadings
+    explainers: ChartExplainers
+    download: DownloadHeading
+    sidebar: AggregationSidebarLabels
+    view_toggle: AdvancedToggleLabels
+    seed: SeedSliderLabels
+    run_control: RunControlLabels
+    special_chart_title: str
+    special_chart_explainer: ChartExplainer
+
+
+DEFAULT_RUN_CONTROL_LABELS = RunControlLabels(
+    run_button="Run simulation",
+    idle_message="Adjust parameters in the sidebar, then click *Run simulation* to start.",
+    spinner_template="Running {runs} replicates...",
+    elapsed_template="Last run: {runs} replicates in {elapsed:.2f}s.",
+)
 
 
 DEFAULT_CHART_EXPLAINERS = ChartExplainers(
@@ -153,51 +284,3 @@ DEFAULT_CHART_EXPLAINERS = ChartExplainers(
         ),
     ),
 )
-
-
-class SeedSliderLabels(BaseModel):
-    """Labels for the per-feature seed input."""
-
-    model_config = ConfigDict(frozen=True)
-
-    label: str
-    help: str
-
-
-class AdvancedToggleLabels(BaseModel):
-    """Labels for the Simple/Advanced radio."""
-
-    model_config = ConfigDict(frozen=True)
-
-    label: str
-    simple_option: str
-    advanced_option: str
-
-
-class FeatureCopy(BaseModel):
-    """All text shown on a single simulation page."""
-
-    model_config = ConfigDict(frozen=True)
-
-    page_header: PageHeader
-    example: ExampleCallout
-    headings: CommonChartHeadings
-    explainers: ChartExplainers
-    download: DownloadHeading
-    sidebar: AggregationSidebarLabels
-    view_toggle: AdvancedToggleLabels
-    seed: SeedSliderLabels
-    run_control: RunControlLabels
-    special_chart_title: str
-    special_chart_explainer: ChartExplainer
-
-
-__all__ = [
-    "DEFAULT_CHART_EXPLAINERS",
-    "DEFAULT_RUN_CONTROL_LABELS",
-    "AdvancedToggleLabels",
-    "ChartExplainers",
-    "CommonChartHeadings",
-    "FeatureCopy",
-    "SeedSliderLabels",
-]
