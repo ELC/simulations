@@ -10,7 +10,7 @@ import streamlit as st
 from pandera.typing import DataFrame
 from pydantic import BaseModel, ConfigDict
 
-from ..model import AdvancedParams, labor_market_history
+from stlite_hello.features.labor_matching.model import AdvancedParams, labor_market_history
 
 _DEFAULT_HEIGHT = 360
 

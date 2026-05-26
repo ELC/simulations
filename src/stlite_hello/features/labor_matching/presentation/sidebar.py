@@ -74,7 +74,7 @@ def _render_simple_form(defaults: SimpleParams) -> AdvancedParams:
 def _render_advanced_form(defaults: AdvancedParams) -> AdvancedParams:
     simple = _render_simple_form(defaults)
     alpha = st.slider(
-        "Matching elasticity α",
+        "Matching elasticity alpha",
         min_value=0.05,
         max_value=0.95,
         value=defaults.alpha,

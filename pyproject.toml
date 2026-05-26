@@ -501,8 +501,15 @@ module = [
     "passlib.*",
     "jose.*",
     "dependency_injector.*",
+    "networkx.*",
 ]
 ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = [
+    "stlite_hello.features.preferential_attachment.model",
+]
+disallow_any_unimported = false
 
 
 #########################

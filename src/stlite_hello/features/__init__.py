@@ -2,7 +2,15 @@
 
 from streamlit.navigation.page import StreamlitPage
 
-from . import cournot, double_auction, kinetic_exchange, labor_matching, sugarscape, yard_sale
+from . import (
+    cournot,
+    double_auction,
+    kinetic_exchange,
+    labor_matching,
+    preferential_attachment,
+    sugarscape,
+    yard_sale,
+)
 
 
 def navigation() -> dict[str, list[StreamlitPage]]:
@@ -17,6 +25,7 @@ def navigation() -> dict[str, list[StreamlitPage]]:
         "Wealth dynamics": [*yard_sale.pages(), *kinetic_exchange.pages(), *sugarscape.pages()],
         "Market structure": [*double_auction.pages(), *cournot.pages()],
         "Labor markets": [*labor_matching.pages()],
+        "Network effects": [*preferential_attachment.pages()],
     }
 
 

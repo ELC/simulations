@@ -62,7 +62,7 @@ def _initial_employment(
     initial_employment: float,
     rng: np.random.Generator,
 ) -> NDArray[np.bool_]:
-    target = int(round(initial_employment * n_workers))
+    target = round(initial_employment * n_workers)
     employed = np.zeros(n_workers, dtype=np.bool_)
     if target > 0:
         indices = rng.choice(n_workers, size=target, replace=False)
@@ -93,7 +93,7 @@ def _step(
     fired = employed & separations
     employed[fired] = False
     vacancies += int(np.sum(fired))
-    new_vacancies = int(round(params.vacancy_creation_rate * employed.size))
+    new_vacancies = round(params.vacancy_creation_rate * employed.size)
     vacancies += new_vacancies
     return vacancies
 
@@ -135,7 +135,7 @@ def _run_replicate(
         rng=rng,
     )
     earnings = np.zeros(params.n_workers, dtype=np.float64)
-    initial_vacancies = int(round(params.vacancy_creation_rate * params.n_workers))
+    initial_vacancies = round(params.vacancy_creation_rate * params.n_workers)
     vacancies = max(initial_vacancies, 1)
     panel = np.empty((params.n_steps + 1, params.n_workers), dtype=np.float64)
     panel[0] = earnings
