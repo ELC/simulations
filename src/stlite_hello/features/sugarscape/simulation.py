@@ -161,11 +161,9 @@ def _run_replicate_snapshot(
 
 
 def simulate_once(params: AdvancedParams, rng: np.random.Generator) -> ReplicateResult:
-    """One Sugarscape replicate; focal quantity is per-agent wealth at each step."""
     snapshot = _run_replicate(params, rng)
     return ReplicateResult(focal_panel=snapshot[0], step_index=snapshot[1])
 
 
 def final_snapshot(params: AdvancedParams, rng: np.random.Generator) -> SpatialSnapshot:
-    """Replay one replicate and capture grid + per-agent positions at the end."""
     return _run_replicate_snapshot(params, rng)

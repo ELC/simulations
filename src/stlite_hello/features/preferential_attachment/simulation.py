@@ -49,7 +49,6 @@ def _grow_graph(params: AdvancedParams, rng: np.random.Generator) -> NDArray[np.
 
 
 def simulate_once(params: AdvancedParams, rng: np.random.Generator) -> ReplicateResult:
-    """One Barabási-Albert replicate; focal quantity is per-node degree."""
     _validate(params)
     panel = _grow_graph(params, rng)
     return ReplicateResult(
@@ -58,8 +57,7 @@ def simulate_once(params: AdvancedParams, rng: np.random.Generator) -> Replicate
     )
 
 
-def final_graph(params: AdvancedParams, rng: np.random.Generator) -> nx.Graph:
-    """Reproduce the network grown by ``simulate_once`` and return a networkx graph."""
+def final_graph(params: AdvancedParams, rng: np.random.Generator) -> nx.Graph:  # type: ignore[no-any-unimported]
     _validate(params)
     graph = nx.Graph()
     for left in range(params.initial_clique):

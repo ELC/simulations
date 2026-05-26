@@ -43,7 +43,6 @@ def build_trajectory_data(
     params: AdvancedParams,
     seed: int,
 ) -> tuple[DataFrame[BestResponseTrajectoryData], DataFrame[BestResponseLinesData]]:
-    """Replay one replicate and extract the (q1, q2) trace + analytic lines."""
     first_child = np.random.SeedSequence(seed).spawn(1)[0]
     trajectory = quantity_trajectory(params, np.random.default_rng(first_child))
     costs = costs_for_seed(params, np.random.default_rng(first_child))
@@ -85,7 +84,8 @@ def build_best_response_chart(
     heading: BestResponseHeading,
 ) -> alt.TopLevelMixin:
     trace = (
-        alt.Chart(trajectory)
+        alt
+        .Chart(trajectory)
         .mark_line(point=True, opacity=0.7)
         .encode(
             x=alt.X("q1:Q", title=heading.x_label),
@@ -96,7 +96,8 @@ def build_best_response_chart(
         )
     )
     best_lines_a = (
-        alt.Chart(lines[lines["firm"] == "Firm A"])
+        alt
+        .Chart(lines[lines["firm"] == "Firm A"])
         .mark_line(color="#d62728")
         .encode(
             x=alt.X("q_self:Q"),
@@ -104,7 +105,8 @@ def build_best_response_chart(
         )
     )
     best_lines_b = (
-        alt.Chart(lines[lines["firm"] == "Firm B"])
+        alt
+        .Chart(lines[lines["firm"] == "Firm B"])
         .mark_line(color="#2ca02c")
         .encode(
             x=alt.X("q_other:Q"),

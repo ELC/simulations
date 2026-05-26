@@ -55,7 +55,6 @@ def _mean_shares_per_bin(shares: NDArray[np.float64]) -> NDArray[np.float64]:
 
 
 def aggregate_wealth_condensation(bundle: RunBundle) -> DataFrame[WealthCondensationData]:
-    """Average per-step rank-binned wealth share across replicates."""
     step_indices, shares = _sample_sorted_shares(bundle)
     mean_share = _mean_shares_per_bin(shares)
     step_grid, rank_grid = np.meshgrid(
@@ -78,7 +77,8 @@ def build_wealth_condensation_chart(
     heading: WealthCondensationHeading,
 ) -> alt.TopLevelMixin:
     chart = (
-        alt.Chart(data)
+        alt
+        .Chart(data)
         .mark_rect()
         .encode(
             x=alt.X("step:O", title=heading.x_label),

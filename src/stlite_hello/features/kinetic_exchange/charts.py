@@ -29,7 +29,6 @@ def build_savings_wealth_panel(
     seed: int,
     runs: int,
 ) -> DataFrame[SavingsWealthData]:
-    """Combine per-replicate savings draws with final wealth."""
     parent = np.random.SeedSequence(seed)
     child_seeds = parent.spawn(runs)
     pieces: list[pd.DataFrame] = []
@@ -63,7 +62,8 @@ def build_savings_wealth_chart(
         tooltip=["run", "agent", "savings_rate", "final_wealth"],
     )
     rolling = (
-        alt.Chart(data)
+        alt
+        .Chart(data)
         .transform_window(
             sort=[{"field": "savings_rate"}],
             mean_wealth="mean(final_wealth)",

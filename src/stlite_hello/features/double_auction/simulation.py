@@ -39,7 +39,6 @@ def _clear_round(
 
 
 def simulate_once(params: AdvancedParams, rng: np.random.Generator) -> ReplicateResult:
-    """Run one CDA replicate, returning the cumulative-surplus panel."""
     cumulative = np.zeros(params.n_traders, dtype=np.float64)
     panel = np.empty((params.n_steps + 1, params.n_traders), dtype=np.float64)
     panel[0] = cumulative
@@ -61,7 +60,6 @@ def simulate_once(params: AdvancedParams, rng: np.random.Generator) -> Replicate
 
 
 def final_orderbook(params: AdvancedParams, rng: np.random.Generator) -> OrderBookSnapshot:
-    """Replay one replicate and capture the very last auction round."""
     snapshot = OrderBookSnapshot(
         bids=np.empty(0, dtype=np.float64),
         asks=np.empty(0, dtype=np.float64),

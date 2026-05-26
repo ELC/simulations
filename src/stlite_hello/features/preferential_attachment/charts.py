@@ -26,7 +26,6 @@ def build_zipf_frame(
     params: AdvancedParams,
     seed: int,
 ) -> DataFrame[ZipfData]:
-    """Replay one replicate, sort nodes by degree, return rank-degree pairs."""
     rng = np.random.default_rng(np.random.SeedSequence(seed).spawn(1)[0])
     graph = final_graph(params, rng)
     degrees = np.array(sorted((deg for _, deg in graph.degree()), reverse=True), dtype=np.float64)
@@ -45,7 +44,8 @@ def build_zipf_chart(
     heading: ZipfHeading,
 ) -> alt.TopLevelMixin:
     base = (
-        alt.Chart(data)
+        alt
+        .Chart(data)
         .mark_circle(size=40, opacity=0.7)
         .encode(
             x=alt.X("rank:Q", title=heading.x_label, scale=alt.Scale(type="log")),

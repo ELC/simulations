@@ -26,7 +26,6 @@ def build_spatial_frames(
     params: AdvancedParams,
     seed: int,
 ) -> tuple[DataFrame[SpatialCellData], DataFrame[AgentLocationData]]:
-    """Replay one replicate and project the final grid + agent positions to dataframes."""
     parent = np.random.SeedSequence(seed)
     rng = np.random.default_rng(parent.spawn(1)[0])
     snapshot = final_snapshot(params, rng)
@@ -59,7 +58,8 @@ def build_spatial_chart(
     heading: SpatialHeading,
 ) -> alt.TopLevelMixin:
     heatmap = (
-        alt.Chart(cells)
+        alt
+        .Chart(cells)
         .mark_rect()
         .encode(
             x=alt.X("col:O", title=heading.col_label),
@@ -73,7 +73,8 @@ def build_spatial_chart(
         )
     )
     bubbles = (
-        alt.Chart(agents)
+        alt
+        .Chart(agents)
         .mark_circle(stroke="white", strokeWidth=0.5)
         .encode(
             x=alt.X("col:O"),

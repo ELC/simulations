@@ -40,12 +40,10 @@ def _profits(
 
 
 def costs_for_seed(params: AdvancedParams, rng: np.random.Generator) -> NDArray[np.float64]:
-    """Replay the cost draw used inside ``simulate_once`` for a given RNG."""
     return _sample_costs(params, rng)
 
 
 def simulate_once(params: AdvancedParams, rng: np.random.Generator) -> ReplicateResult:
-    """One Cournot replicate; focal quantity is per-firm profit at each step."""
     costs = _sample_costs(params, rng)
     quantities: NDArray[np.float64] = np.full(
         params.n_firms,
@@ -78,7 +76,6 @@ def quantity_trajectory(
     params: AdvancedParams,
     rng: np.random.Generator,
 ) -> NDArray[np.float64]:
-    """Reconstruct the per-step quantity vector for the special chart."""
     costs = _sample_costs(params, rng)
     quantities: NDArray[np.float64] = np.full(
         params.n_firms,

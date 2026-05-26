@@ -34,7 +34,6 @@ def _kinetic_step(
 
 
 def simulate_once(params: AdvancedParams, rng: np.random.Generator) -> ReplicateResult:
-    """One Kinetic Exchange replicate."""
     wealth = np.full(params.n_agents, params.initial_wealth, dtype=np.float64)
     savings = _sample_savings(rng, params)
     panel = np.empty((params.n_steps + 1, params.n_agents), dtype=np.float64)
@@ -49,5 +48,4 @@ def simulate_once(params: AdvancedParams, rng: np.random.Generator) -> Replicate
 
 
 def savings_per_agent(params: AdvancedParams, rng: np.random.Generator) -> NDArray[np.float64]:
-    """Reproduce the per-agent savings draw used inside ``simulate_once``."""
     return _sample_savings(rng, params)

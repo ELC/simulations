@@ -84,7 +84,6 @@ def _run_replicate(
 
 
 def simulate_once(params: AdvancedParams, rng: np.random.Generator) -> ReplicateResult:
-    """One labor-matching replicate; focal quantity is per-worker cumulative wage income."""
     panel, _ = _run_replicate(params, rng)
     return ReplicateResult(
         focal_panel=panel,
@@ -93,6 +92,5 @@ def simulate_once(params: AdvancedParams, rng: np.random.Generator) -> Replicate
 
 
 def labor_market_history(params: AdvancedParams, rng: np.random.Generator) -> LaborMarketHistory:
-    """Replay one replicate and return the per-step unemployment and vacancy rates."""
     _, history = _run_replicate(params, rng)
     return history

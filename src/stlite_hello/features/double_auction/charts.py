@@ -25,7 +25,6 @@ def build_supply_demand_frame(
     params: AdvancedParams,
     seed: int,
 ) -> tuple[DataFrame[SupplyDemandData], float]:
-    """Replay one replicate to extract the final-round supply / demand curves."""
     parent = np.random.SeedSequence(seed)
     first_child = parent.spawn(1)[0]
     rng = np.random.default_rng(first_child)
@@ -57,7 +56,8 @@ def build_supply_demand_chart(
     heading: SupplyDemandHeading,
 ) -> alt.TopLevelMixin:
     curves = (
-        alt.Chart(data)
+        alt
+        .Chart(data)
         .mark_line(interpolate="step-after")
         .encode(
             x=alt.X("quantity:Q", title=heading.x_label),
@@ -66,7 +66,8 @@ def build_supply_demand_chart(
         )
     )
     rule = (
-        alt.Chart(pd.DataFrame({"clearing": [clearing_price]}))
+        alt
+        .Chart(pd.DataFrame({"clearing": [clearing_price]}))
         .mark_rule(strokeDash=[4, 4], color="gray")
         .encode(y=alt.Y("clearing:Q", title=heading.clearing_label))
     )

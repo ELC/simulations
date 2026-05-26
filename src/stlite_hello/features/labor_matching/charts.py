@@ -25,7 +25,6 @@ def build_beveridge_frame(
     params: AdvancedParams,
     seed: int,
 ) -> DataFrame[BeveridgeData]:
-    """Replay one replicate and project the (U, V) time series to a frame."""
     rng = np.random.default_rng(np.random.SeedSequence(seed).spawn(1)[0])
     history = labor_market_history(params, rng)
     frame = pd.DataFrame(
@@ -44,7 +43,8 @@ def build_beveridge_chart(
     heading: BeveridgeHeading,
 ) -> alt.TopLevelMixin:
     line = (
-        alt.Chart(data)
+        alt
+        .Chart(data)
         .mark_line(opacity=0.5)
         .encode(
             x=alt.X("unemployment_rate:Q", title=heading.x_label),
@@ -53,7 +53,8 @@ def build_beveridge_chart(
         )
     )
     points = (
-        alt.Chart(data)
+        alt
+        .Chart(data)
         .mark_circle(size=60)
         .encode(
             x=alt.X("unemployment_rate:Q"),

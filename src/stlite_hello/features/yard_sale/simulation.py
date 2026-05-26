@@ -25,7 +25,6 @@ def _yard_sale_step(
 
 
 def simulate_once(params: AdvancedParams, rng: np.random.Generator) -> ReplicateResult:
-    """Run one Yard-Sale replicate and return the per-step wealth panel."""
     wealth = np.full(params.n_agents, params.initial_wealth, dtype=np.float64)
     panel = np.empty((params.n_steps + 1, params.n_agents), dtype=np.float64)
     panel[0] = wealth
