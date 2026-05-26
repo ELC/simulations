@@ -50,10 +50,10 @@ def test_build_site_writes_package_layout(
         (output_dir / path).is_file()
         for path in (
             app_entrypoint,
-            "stlite_hello/features/charts/charts.py",
-            "stlite_hello/features/home/page.py",
-            "stlite_hello/features/charts/page.py",
-            "stlite_hello/features/about/page.py",
+            "stlite_hello/features/yard_sale/model.py",
+            "stlite_hello/features/yard_sale/page.py",
+            "stlite_hello/features/yard_sale/presentation/controller.py",
+            "stlite_hello/presentation/sections.py",
         )
     )
     assert not (package / "site").exists()
@@ -85,13 +85,13 @@ def test_index_html_mounts_every_package_file(
         "stlite_hello/__init__.py",
         app_entrypoint,
         "stlite_hello/features/__init__.py",
-        "stlite_hello/features/home/__init__.py",
-        "stlite_hello/features/home/page.py",
-        "stlite_hello/features/charts/__init__.py",
-        "stlite_hello/features/charts/charts.py",
-        "stlite_hello/features/charts/page.py",
-        "stlite_hello/features/about/__init__.py",
-        "stlite_hello/features/about/page.py",
+        "stlite_hello/features/yard_sale/__init__.py",
+        "stlite_hello/features/yard_sale/model.py",
+        "stlite_hello/features/yard_sale/page.py",
+        "stlite_hello/features/yard_sale/presentation/__init__.py",
+        "stlite_hello/features/yard_sale/presentation/controller.py",
+        "stlite_hello/presentation/__init__.py",
+        "stlite_hello/presentation/sections.py",
     )
     for relative_path in expected_files:
         assert f'<app-file name="{relative_path}"' in index_html

@@ -9,6 +9,7 @@ back to the same :class:`SimulationRunExport`, and a second
 from datetime import UTC, datetime, timedelta
 from typing import Any, Literal
 
+import pandas as pd
 from pandera.typing import DataFrame
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -77,8 +78,6 @@ class SimulationRunExport(BaseModel):
             Pandera-validated bundle with the original ``final_population``
             and ``focal_panel`` frames.
         """
-        import pandas as pd  # noqa: PLC0415 — heavy import kept local to this slow path
-
         return RunBundle(
             final_population=DataFrame[FinalPopulation](pd.DataFrame(self.bundle.final_population)),
             focal_panel=DataFrame[FocalPanel](pd.DataFrame(self.bundle.focal_panel)),
@@ -92,8 +91,6 @@ class SimulationRunExport(BaseModel):
         SimulationReport
             Fully validated report frames, ready for chart builders.
         """
-        import pandas as pd  # noqa: PLC0415 — heavy import kept local to this slow path
-
         return SimulationReport(
             metrics_ci=DataFrame[MetricCI](pd.DataFrame(self.report.metrics_ci)),
             metrics_ci_over_time=DataFrame[MetricCIOverTime](pd.DataFrame(self.report.metrics_ci_over_time)),

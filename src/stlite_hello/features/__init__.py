@@ -1,12 +1,32 @@
+"""Public feature registry, grouped for sidebar navigation."""
+
 from streamlit.navigation.page import StreamlitPage
 
-from .about import pages as about_pages
-from .charts import pages as charts_pages
-from .home import pages as home_pages
+from . import yard_sale
+
+
+def navigation() -> dict[str, list[StreamlitPage]]:
+    """Return the grouped navigation dict consumed by ``st.navigation``.
+
+    Returns
+    -------
+    dict[str, list[StreamlitPage]]
+        Mapping from sidebar group label to the list of pages for that group.
+    """
+    return {
+        "Wealth dynamics": [*yard_sale.pages()],
+    }
 
 
 def pages() -> list[StreamlitPage]:
-    return [*home_pages(), *charts_pages(), *about_pages()]
+    """Return the flat list of pages across every group.
+
+    Returns
+    -------
+    list[StreamlitPage]
+        Every page in every group, in declaration order.
+    """
+    return [page for group in navigation().values() for page in group]
 
 
-__all__ = ["pages"]
+__all__ = ["navigation", "pages"]

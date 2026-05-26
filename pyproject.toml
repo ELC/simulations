@@ -437,9 +437,9 @@ ci = { sequence = [
 ] }
 
 [tool.poe.tasks.dev-feature]
-help = "Run one feature slice (home, charts, or about)"
+help = "Run one simulation slice"
 cmd = "streamlit run src/stlite_hello/features/${feature}/__main__.py"
-args = [{ name = "feature", positional = true, help = "Feature slice: home | charts | about" }]
+args = [{ name = "feature", positional = true, help = "Feature slice: yard_sale | kinetic_exchange | double_auction | cournot | sugarscape | labor_matching | preferential_attachment" }]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

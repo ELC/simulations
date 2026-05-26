@@ -1,0 +1,60 @@
+# serializer version: 1
+# name: test_yard_sale_export_snapshot_matches
+  list([
+    dict({
+      'estimate': 0.264182,
+      'family': 'concentration',
+      'metric': 'gini',
+    }),
+    dict({
+      'estimate': 0.096099,
+      'family': 'concentration',
+      'metric': 'top_1pct_share',
+    }),
+    dict({
+      'estimate': 4.421714,
+      'family': 'concentration',
+      'metric': 'hill_alpha',
+    }),
+    dict({
+      'estimate': 0.485076,
+      'family': 'concentration',
+      'metric': 'coefficient_of_variation',
+    }),
+    dict({
+      'estimate': 3.064037,
+      'family': 'concentration',
+      'metric': 'shannon_entropy',
+    }),
+    dict({
+      'estimate': 8.25,
+      'family': 'concentration',
+      'metric': 'convergence_half_life',
+    }),
+    dict({
+      'estimate': 0.308333,
+      'family': 'mobility',
+      'metric': 'top_1pct_turnover',
+    }),
+    dict({
+      'estimate': 0.691667,
+      'family': 'mobility',
+      'metric': 'top_1pct_persistence',
+    }),
+    dict({
+      'estimate': 3.264423,
+      'family': 'mobility',
+      'metric': 'mean_top_1pct_tenure',
+    }),
+    dict({
+      'estimate': 0.09375,
+      'family': 'mobility',
+      'metric': 'bottom_to_top_rise_count',
+    }),
+    dict({
+      'estimate': 12.25,
+      'family': 'mobility',
+      'metric': 'median_time_to_rise',
+    }),
+  ])
+# ---

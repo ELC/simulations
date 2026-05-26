@@ -7,7 +7,7 @@ and uncorrelated with the others.
 """
 
 from collections.abc import Callable
-from typing import Protocol
+from typing import Any
 
 import numpy as np
 import pandas as pd
@@ -36,12 +36,17 @@ class ReplicateResult(BaseModel):
     step_index: NDArray[np.int_]
 
 
-class ParamsProtocol(Protocol):
-    """Marker for simulation parameter models (any frozen Pydantic BaseModel)."""
+type ParamsProtocol = BaseModel
+"""Alias for simulation parameter models (any frozen Pydantic BaseModel)."""
 
 
-SimulateOnce = Callable[[ParamsProtocol, np.random.Generator], ReplicateResult]
-"""A simulation callable: takes params and an RNG, returns a ``ReplicateResult``."""
+SimulateOnce = Callable[[Any, np.random.Generator], ReplicateResult]
+"""A simulation callable: ``simulate_once(params, rng) -> ReplicateResult``.
+
+``params`` is typed ``Any`` so each feature can pass its own frozen
+``BaseModel`` subclass without a contravariance error; the runtime
+contract is enforced by the per-feature signature on ``simulate_once``.
+"""
 
 
 class RunBundle(BaseModel):
