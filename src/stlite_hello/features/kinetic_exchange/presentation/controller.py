@@ -60,15 +60,27 @@ def render() -> None:
         return
     bundle = outcome.bundle
     report = outcome.report
-    sections.render_metrics_table(report.metrics_ci, copy.headings.metrics_table)
+    headings = copy.headings
+    explainers = copy.explainers
+    sections.render_metrics_table(report.metrics_ci, headings.metrics_table, explainers.metrics_table)
     sections.render_metric_trajectories(
         report.metrics_ci_over_time,
-        copy.headings.metric_trajectories,
+        headings.metric_trajectories,
+        explainers.metric_trajectories,
     )
-    sections.render_lorenz(report.lorenz, copy.headings.lorenz)
-    sections.render_kde_and_fits(report.kde, report.fitted_densities, copy.headings.kde_fits)
-    sections.render_aic_ranking(report.fits, copy.headings.aic_ranking)
-    sections.render_decile_transitions(report.decile_transitions, copy.headings.decile_transitions)
+    sections.render_lorenz(report.lorenz, headings.lorenz, explainers.lorenz)
+    sections.render_kde_and_fits(
+        report.kde,
+        report.fitted_densities,
+        headings.kde_fits,
+        explainers.kde_fits,
+    )
+    sections.render_aic_ranking(report.fits, headings.aic_ranking, explainers.aic_ranking)
+    sections.render_decile_transitions(
+        report.decile_transitions,
+        headings.decile_transitions,
+        explainers.decile_transitions,
+    )
     st.subheader(copy.special_chart_title)
     render_special_chart(
         SpecialChartInputs(
@@ -79,6 +91,7 @@ def render() -> None:
             heading=KINETIC_SPECIAL_HEADING,
         ),
     )
+    sections.render_special_chart_explainer(copy.special_chart_explainer)
 
 
 __all__ = ["render"]

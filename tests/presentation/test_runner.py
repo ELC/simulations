@@ -156,7 +156,15 @@ def _fake_report() -> SimulationReport:
 
 
 def build_fake_run_inputs() -> RunControlInputs:
-    """Construct deterministic ``RunControlInputs`` for the AppTest script."""
+    """Construct deterministic ``RunControlInputs`` for the AppTest script.
+
+    Returns
+    -------
+    RunControlInputs
+        Inputs whose ``run`` and ``summarize`` callbacks return frozen fakes
+        so the AppTest can exercise the toolbar without launching a real
+        simulation.
+    """
     bundle = _fake_bundle()
     report = _fake_report()
     config = AggregationConfig(seed=7, runs=1, bootstrap_resamples=200, trajectory_step_samples=2)

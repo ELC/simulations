@@ -339,17 +339,38 @@ A slice **must** ship:
      `final_graph`) so the chart never re-runs the analysis pipeline.
 
 2. **`presentation/`** subpackage with one file per concern:
-   - `view_models.py` — frozen `FeatureCopy` (with `PageHeader`,
-     `ExampleCallout`, `CommonChartHeadings`, sidebar/seed/toggle labels,
-     `DownloadHeading`, `run_control` — typically
-     `DEFAULT_RUN_CONTROL_LABELS`, `special_chart_title`) plus the
-     slice-specific `*Heading` for the special chart. **All UI text
-     lives here.**
+   - `view_models.py` — frozen `FeatureCopy` carrying **every string the
+     page renders**:
+     - `PageHeader` (title, icon, caption).
+     - `ExampleCallout` with **four required fields** describing the
+       real-world analogue: `headline` (one-line tagline), `summary` (the
+       multi-sentence story — a concrete scenario the reader can picture,
+       not a one-liner), `mechanism` (paragraph mapping that scenario
+       onto the simulation's rules), and `references: tuple[Reference,
+       ...]` listing the seminal papers. Each `Reference` carries
+       `citation`, `title`, `venue`, and `url` so the renderer can build
+       a "Seminal papers and further reading" expander with markdown
+       links. Aim for ~3-5 references per slice.
+     - `CommonChartHeadings` (axis labels, titles for every shared
+       chart).
+     - `ChartExplainers` — typically `DEFAULT_CHART_EXPLAINERS`, which
+       supplies the "How to read it" / "What it tells you" copy shared
+       across all simulations. Override only when a slice measures
+       something the default copy mis-describes.
+     - `special_chart_title` + a slice-specific
+       `special_chart_explainer: ChartExplainer` (custom per slice
+       because the chart is unique).
+     - `DownloadHeading`, sidebar/seed/toggle labels, and
+       `run_control` (typically `DEFAULT_RUN_CONTROL_LABELS`).
+     - The slice-specific `*Heading` for the special chart. **All UI
+       text lives here — no free-floating literals in controllers or
+       sections.**
    - `sidebar.py` exposing `SidebarInputs` and `build_config(...)`. The
      public surface must take a `SidebarInputs(defaults=<Slice>Config)`
      and return the same frozen config type — never raw primitives.
    - `sections.py` re-exports the shared section renderers from
-     `stlite_hello.presentation`, nothing more.
+     `stlite_hello.presentation` (including
+     `render_special_chart_explainer`), nothing more.
    - `special_chart.py` with:
      - One or more `pa.DataFrameModel`s for every dataframe the chart
        consumes,
@@ -359,24 +380,31 @@ A slice **must** ship:
      - `render_special_chart(inputs: SpecialChartInputs)` that calls
        `st.altair_chart` with `width="stretch"` (cast to `alt.Chart`).
    - `controller.py` orchestrating page header → `render_example_callout`
-     (real-world analogue, **must be rendered before the run toolbar**) →
-     sidebar → `render_run_control` → section renderers → special chart.
-     The controller **must** gate every analysis call behind
+     (real-world analogue + seminal-paper references, **must be rendered
+     before the run toolbar**) → sidebar → `render_run_control` →
+     section renderers → special chart →
+     `render_special_chart_explainer`. The controller **must** gate
+     every analysis call behind
      `render_run_control(RunControlInputs(..., download=copy.download))`;
      the simulation only runs when the user clicks the **Run simulation**
      button. The run-control helper renders a side-by-side toolbar with
      the **Run simulation** primary button and the JSON **Download**
      button (disabled until a run completes), so controllers must **not**
      call `render_download` themselves — passing `download=copy.download`
-     into `RunControlInputs` is the only download wiring needed. If
-     `render_run_control` returns `None`, the controller returns
-     immediately (the helper renders the idle prompt and the disabled
-     download). When the controller needs the slice's typed
-     `AdvancedParams` (e.g. for the special chart), import it under
-     `if TYPE_CHECKING:` and use `cast("AdvancedParams", outcome.params)`
-     so pyright/mypy stay strict while pylint sees the import as
-     type-only. Must not contain any free-floating literal strings — pull
-     them from the `FeatureCopy` view model.
+     into `RunControlInputs` is the only download wiring needed. Each
+     shared `sections.render_*` takes a matching
+     `copy.explainers.<name>` so a collapsible "How to read this
+     chart" expander sits below every chart and table; the controller
+     pulls them from `copy.explainers` (don't reach into
+     `DEFAULT_CHART_EXPLAINERS` directly). If `render_run_control`
+     returns `None`, the controller returns immediately (the helper
+     renders the idle prompt and the disabled download). When the
+     controller needs the slice's typed `AdvancedParams` (e.g. for the
+     special chart), import it under `if TYPE_CHECKING:` and use
+     `cast("AdvancedParams", outcome.params)` so pyright/mypy stay
+     strict while pylint sees the import as type-only. Must not contain
+     any free-floating literal strings — pull them from the
+     `FeatureCopy` view model.
 
 3. **`page.py`** that exposes `pages() -> list[StreamlitPage]` with a
    single `st.Page(render, ...)`. **No analysis or UI logic** beyond the
@@ -479,4 +507,4 @@ matching skill in the same change.
 
 ---
 
-_Last reviewed: 2026-05-26 (Python 3.13) — seven free-market simulation slices in place; gated runs via shared `render_run_control` (Run + disabled-until-ready Download toolbar) + numpy `RunBundle.panels` view to keep summarize fast; real-world analogue rendered above the run toolbar._
+_Last reviewed: 2026-05-26 (Python 3.13) — seven free-market simulation slices in place; gated runs via shared `render_run_control` (Run + disabled-until-ready Download toolbar) + numpy `RunBundle.panels` view to keep summarize fast; real-world analogue (narrative `ExampleCallout` with `headline`/`summary`/`mechanism`/`references` and seminal-paper links) rendered above the run toolbar; every chart carries a "How to read it" `ChartExplainer` expander, defaulting to `DEFAULT_CHART_EXPLAINERS` plus a per-slice `special_chart_explainer`._

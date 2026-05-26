@@ -2,15 +2,18 @@
 
 from stlite_hello.analysis import ChartHeading, DecileHeatmapHeading, KdeFitsHeading
 from stlite_hello.presentation import (
+    DEFAULT_CHART_EXPLAINERS,
     DEFAULT_RUN_CONTROL_LABELS,
     AdvancedToggleLabels,
     AggregationSidebarLabels,
+    ChartExplainer,
     CommonChartHeadings,
     DownloadHeading,
     ExampleCallout,
     FeatureCopy,
     MetricsTableHeading,
     PageHeader,
+    Reference,
     SeedSliderLabels,
 )
 
@@ -27,10 +30,56 @@ PREFERENTIAL_ATTACHMENT_COPY = FeatureCopy(
         ),
     ),
     example=ExampleCallout(
-        body=(
-            "Real-world analogue: **academic citation networks** where new papers cite "
-            "well-cited classics with high probability, producing a small number of "
-            "ultra-influential references and a long tail of niche work."
+        headline="Academic citation networks (the Matthew effect)",
+        summary=(
+            "When a PhD student writes the literature review of a new paper on, say, "
+            "transformer attention, they overwhelmingly cite the handful of canonical "
+            "papers everyone already cites (Vaswani 2017, Devlin 2018, …) rather than "
+            "trawling arXiv for obscure but relevant work. Multiply that behaviour over "
+            "millions of submissions across decades and you get the empirical shape that "
+            "**~80% of citations accrue to ~20% of papers**, with a long tail of "
+            "uncited niche work and a handful of papers cited tens of thousands of "
+            "times. Robert Merton called this the **Matthew effect** in 1968 — 'unto "
+            "everyone that hath shall be given' — and Derek de Solla Price formalised "
+            "it as 'cumulative advantage' in 1976. The same mechanism shapes who you "
+            "follow on Twitter/X, which YouTube channels get recommended, and which "
+            "open-source repositories get starred."
+        ),
+        mechanism=(
+            "Each step adds a new node that connects to `m` existing nodes, choosing "
+            "each target with probability proportional to its current degree (Barabási-"
+            "Albert preferential attachment). The result is a degree distribution that "
+            "converges to a power law `P(k) ~ k^{-3}` regardless of starting conditions. "
+            "Once a hub becomes large enough, every newcomer is overwhelmingly likely to "
+            "link to it — the **rich-get-richer** dynamic that the metrics, the Lorenz "
+            "curve, and the Zipf log-log plot all detect from different angles."
+        ),
+        references_title="Seminal papers and further reading",
+        references=(
+            Reference(
+                citation="Barabási & Albert (1999)",
+                title="Emergence of scaling in random networks",
+                venue="Science, 286(5439), 509-512",
+                url="https://doi.org/10.1126/science.286.5439.509",
+            ),
+            Reference(
+                citation="Price (1976)",
+                title=("A general theory of bibliometric and other cumulative advantage processes"),
+                venue="Journal of the American Society for Information Science, 27(5), 292-306",
+                url="https://doi.org/10.1002/asi.4630270505",
+            ),
+            Reference(
+                citation="Merton (1968)",
+                title="The Matthew effect in science",
+                venue="Science, 159(3810), 56-63",
+                url="https://doi.org/10.1126/science.159.3810.56",
+            ),
+            Reference(
+                citation="Newman (2005)",
+                title="Power laws, Pareto distributions and Zipf's law",
+                venue="Contemporary Physics, 46(5), 323-351",
+                url="https://doi.org/10.1080/00107510500052444",
+            ),
         ),
     ),
     headings=CommonChartHeadings(
@@ -88,7 +137,27 @@ PREFERENTIAL_ATTACHMENT_COPY = FeatureCopy(
         help="Deterministic seed for this simulation only.",
     ),
     run_control=DEFAULT_RUN_CONTROL_LABELS,
+    explainers=DEFAULT_CHART_EXPLAINERS,
     special_chart_title="Zipf log-log degree-rank plot",
+    special_chart_explainer=ChartExplainer(
+        expander_title="How to read this chart",
+        how_to_read=(
+            "Nodes are sorted from most-connected (rank 1) to least-connected "
+            "(rank N) and plotted on a **log-log axis**: x = log(rank), "
+            "y = log(degree). A straight line on this chart means the degree "
+            "distribution follows a power law `degree ~ rank^{-alpha}`; the "
+            "slope is the Zipf exponent and the intercept calibrates the "
+            "size of the largest hub."
+        ),
+        what_it_means=(
+            "A perfectly linear cloud is the visual fingerprint of "
+            "scale-free behaviour — the same shape Barabási-Albert predicted "
+            "and that Newman documented for word frequencies, city sizes, "
+            "and web links. Curvature at the top tail (the largest hubs) "
+            "would suggest a finite-size cutoff; curvature at the bottom "
+            "tail comes from the discrete-degree floor."
+        ),
+    ),
 )
 
 PREFERENTIAL_ATTACHMENT_SPECIAL_HEADING = ZipfHeading(

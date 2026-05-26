@@ -9,6 +9,7 @@ from stlite_hello.presentation import (
     render_metric_trajectories,
     render_metrics_table,
     render_page_header,
+    render_special_chart_explainer,
 )
 
 __all__ = [
@@ -20,4 +21,5 @@ __all__ = [
     "render_metric_trajectories",
     "render_metrics_table",
     "render_page_header",
+    "render_special_chart_explainer",
 ]

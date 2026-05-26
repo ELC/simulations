@@ -5,7 +5,13 @@ from pydantic import BaseModel, ConfigDict
 from stlite_hello.analysis import ChartHeading, DecileHeatmapHeading, KdeFitsHeading
 
 from .runner import RunControlLabels
-from .sections import DownloadHeading, ExampleCallout, MetricsTableHeading, PageHeader
+from .sections import (
+    ChartExplainer,
+    DownloadHeading,
+    ExampleCallout,
+    MetricsTableHeading,
+    PageHeader,
+)
 from .sidebar import AggregationSidebarLabels
 
 DEFAULT_RUN_CONTROL_LABELS = RunControlLabels(
@@ -27,6 +33,126 @@ class CommonChartHeadings(BaseModel):
     kde_fits: KdeFitsHeading
     aic_ranking: ChartHeading
     decile_transitions: DecileHeatmapHeading
+
+
+class ChartExplainers(BaseModel):
+    """Bundle of per-chart how-to-read explainers shared by every simulation."""
+
+    model_config = ConfigDict(frozen=True)
+
+    metrics_table: ChartExplainer
+    metric_trajectories: ChartExplainer
+    lorenz: ChartExplainer
+    kde_fits: ChartExplainer
+    aic_ranking: ChartExplainer
+    decile_transitions: ChartExplainer
+
+
+DEFAULT_CHART_EXPLAINERS = ChartExplainers(
+    metrics_table=ChartExplainer(
+        expander_title="How to read this table",
+        how_to_read=(
+            "Each row is one metric averaged across all replicates. The point "
+            "estimate sits between a **lower** and **upper** bound that form a "
+            "95% bootstrap confidence interval: with the same seed family and "
+            "parameters, a fresh run would land inside that interval ~95% of the "
+            "time. Wider intervals mean the metric is noisier — usually because "
+            "fewer replicates or a stochastic mechanism dominates."
+        ),
+        what_it_means=(
+            "Concentration metrics (Gini, top-1%, top-10%, Theil, Atkinson, "
+            "coefficient of variation) describe **how unequal** the final state "
+            "is; mobility metrics (Spearman, decile-overlap, top-decile spell "
+            "length, turnover) describe **how much agents move between ranks**. "
+            "High concentration + low mobility is an oligarchy; high concentration "
+            "+ high mobility is a churn-driven boom-bust regime."
+        ),
+    ),
+    metric_trajectories=ChartExplainer(
+        expander_title="How to read this chart",
+        how_to_read=(
+            "Each panel plots one metric versus the simulation step. The solid "
+            "line is the mean across replicates and the shaded band is the 95% "
+            "bootstrap CI at every snapshot. A narrowing band means replicates "
+            "agree; a widening band means the system is still exploring."
+        ),
+        what_it_means=(
+            "Look for the **shape**: a monotonically rising Gini means the system "
+            "keeps concentrating; a plateau means a steady-state distribution has "
+            "emerged; oscillations hint at cyclical dynamics or a stochastic "
+            "attractor. Compare against the same chart on a different simulation "
+            "to see whose dynamics settle faster."
+        ),
+    ),
+    lorenz=ChartExplainer(
+        expander_title="How to read this chart",
+        how_to_read=(
+            "The x-axis is the cumulative share of agents (poorest on the left); "
+            "the y-axis is the cumulative share of the resource they hold. The "
+            "**diagonal** is perfect equality (everyone holds the same). The "
+            "**curve** bulges below the diagonal; the bigger the gap, the more "
+            "unequal the distribution. Gini is exactly twice the area between "
+            "the curve and the diagonal."
+        ),
+        what_it_means=(
+            "A near-diagonal Lorenz means the simulation produced an egalitarian "
+            "outcome. A curve hugging the bottom-right corner means a tiny "
+            "minority owns almost everything. The shape lets you eyeball "
+            "inequality without committing to a single scalar like Gini."
+        ),
+    ),
+    kde_fits=ChartExplainer(
+        expander_title="How to read this chart",
+        how_to_read=(
+            "The grey histogram-like curve is a kernel density estimate (KDE) "
+            "of the final empirical distribution — a smoothed shape of where "
+            "agents end up. The coloured lines on top are the **three best-fit "
+            "parametric distributions** ranked by AIC: closer overlap = better "
+            "model. A heavy right tail dragging the KDE away from the fits is a "
+            "tell-tale of an emergent power law."
+        ),
+        what_it_means=(
+            "If a single fit hugs the KDE tightly, the simulation reproduces a "
+            "known statistical regime (lognormal labour earnings, exponential "
+            "intertrade times, Pareto wealth, etc.). If all fits miss the tail, "
+            "the dynamics produced a heavier-tailed regime than any standard "
+            "family captures."
+        ),
+    ),
+    aic_ranking=ChartExplainer(
+        expander_title="How to read this chart",
+        how_to_read=(
+            "Each bar is one candidate distribution; the length is the ΔAIC "
+            "relative to the best fit (best = 0). Rules of thumb from Burnham & "
+            "Anderson (2002): ΔAIC < 2 means roughly equivalent support, 4-7 "
+            "means considerably less support, > 10 means essentially no support."
+        ),
+        what_it_means=(
+            "The winning family is your best parametric summary of the final "
+            "state. If lognormal and gamma tie, the regime is light-tailed and "
+            "well behaved; if Pareto / power-law wins by a wide margin, the "
+            "mechanism produced scale-free concentration that mean / variance "
+            "summaries will systematically mis-describe."
+        ),
+    ),
+    decile_transitions=ChartExplainer(
+        expander_title="How to read this chart",
+        how_to_read=(
+            "Rows are the agent's **initial** decile (1 = poorest, 10 = richest); "
+            "columns are the **final** decile. Each cell is the probability of "
+            "moving from row to column, averaged across replicates. A bright "
+            "diagonal means everyone stays where they started; a flat heatmap "
+            "means decile membership is essentially random by the end."
+        ),
+        what_it_means=(
+            "This is the mobility chart. Highly diagonal heatmaps describe "
+            "**sticky** societies / markets (where you start determines where "
+            "you end); flat heatmaps describe **churn** regimes. Asymmetries "
+            "(e.g. easier to fall than to rise) jump out as off-diagonal mass "
+            "shifted to one side."
+        ),
+    ),
+)
 
 
 class SeedSliderLabels(BaseModel):
@@ -56,17 +182,21 @@ class FeatureCopy(BaseModel):
     page_header: PageHeader
     example: ExampleCallout
     headings: CommonChartHeadings
+    explainers: ChartExplainers
     download: DownloadHeading
     sidebar: AggregationSidebarLabels
     view_toggle: AdvancedToggleLabels
     seed: SeedSliderLabels
     run_control: RunControlLabels
     special_chart_title: str
+    special_chart_explainer: ChartExplainer
 
 
 __all__ = [
+    "DEFAULT_CHART_EXPLAINERS",
     "DEFAULT_RUN_CONTROL_LABELS",
     "AdvancedToggleLabels",
+    "ChartExplainers",
     "CommonChartHeadings",
     "FeatureCopy",
     "SeedSliderLabels",

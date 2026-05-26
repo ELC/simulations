@@ -11,10 +11,12 @@ from .runner import (
     render_run_control,
 )
 from .sections import (
+    ChartExplainer,
     DownloadHeading,
     ExampleCallout,
     MetricsTableHeading,
     PageHeader,
+    Reference,
     render_aic_ranking,
     render_decile_transitions,
     render_example_callout,
@@ -23,6 +25,7 @@ from .sections import (
     render_metric_trajectories,
     render_metrics_table,
     render_page_header,
+    render_special_chart_explainer,
 )
 from .sidebar import (
     AggregationSidebarInputs,
@@ -30,24 +33,30 @@ from .sidebar import (
     build_aggregation_config,
 )
 from .view_models import (
+    DEFAULT_CHART_EXPLAINERS,
     DEFAULT_RUN_CONTROL_LABELS,
     AdvancedToggleLabels,
+    ChartExplainers,
     CommonChartHeadings,
     FeatureCopy,
     SeedSliderLabels,
 )
 
 __all__ = [
+    "DEFAULT_CHART_EXPLAINERS",
     "DEFAULT_RUN_CONTROL_LABELS",
     "AdvancedToggleLabels",
     "AggregationSidebarInputs",
     "AggregationSidebarLabels",
+    "ChartExplainer",
+    "ChartExplainers",
     "CommonChartHeadings",
     "DownloadHeading",
     "ExampleCallout",
     "FeatureCopy",
     "MetricsTableHeading",
     "PageHeader",
+    "Reference",
     "RunControlInputs",
     "RunControlLabels",
     "SeedSliderLabels",
@@ -62,4 +71,5 @@ __all__ = [
     "render_metrics_table",
     "render_page_header",
     "render_run_control",
+    "render_special_chart_explainer",
 ]
