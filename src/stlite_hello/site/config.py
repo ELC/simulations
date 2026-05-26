@@ -33,12 +33,6 @@ class SiteSettings(BaseSettings):
         ),
     )
     default_output_dir: Path = Field(default=Path("_site"))
-    pyodide_bundle_versions: dict[str, SemanticVersion] = Field(
-        default_factory=lambda: {
-            "numpy": SemanticVersion.parse("2.2.5"),
-            "pandas": SemanticVersion.parse("2.3.3"),
-        },
-    )
 
     @cached_property
     def package_dir(self) -> Path:

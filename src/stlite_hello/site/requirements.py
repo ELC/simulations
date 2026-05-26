@@ -1,4 +1,4 @@
-from collections.abc import Mapping, Sequence
+from collections.abc import Sequence
 from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field, TypeAdapter, field_validator, model_validator
@@ -58,16 +58,6 @@ class Requirements(BaseModel):
     @property
     def specs(self) -> list[str]:
         return [f"{requirement.name}=={requirement.version}" for requirement in self.requirements]
-
-    def aligned_to(self, overrides: Mapping[str, SemanticVersion]) -> "Requirements":
-        aligned_requirements = [
-            Requirement(
-                name=requirement.name,
-                version=overrides.get(requirement.name, requirement.version),
-            )
-            for requirement in self.requirements
-        ]
-        return Requirements(requirements=aligned_requirements)
 
 
 RequirementsAdapter = TypeAdapter[Requirements](Requirements)  # pylint: disable=invalid-name

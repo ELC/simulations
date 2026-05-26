@@ -1,7 +1,7 @@
 import pytest
 from pydantic import TypeAdapter
 
-from stlite_hello.site import Requirement, Requirements, SemanticVersion
+from stlite_hello.site import Requirement, Requirements
 
 
 def test_browser_requirement_rejects_unpinned_specification() -> None:
@@ -89,28 +89,3 @@ def test_browser_requirements_accepts_requirements_mapping() -> None:
     )
 
     assert loaded.names == ["altair"]
-
-
-def test_requirements_aligned_to_overrides_known_names() -> None:
-    requirements = Requirements.model_validate(
-        {"requirements": ["altair==6.5.0", "numpy==2.4.0", "pydantic==2.12.5"]},
-    )
-
-    aligned = requirements.aligned_to(
-        {
-            "altair": SemanticVersion.parse("6.0.0"),
-            "numpy": SemanticVersion.parse("2.2.5"),
-        },
-    )
-
-    assert aligned.specs == ["altair==6.0.0", "numpy==2.2.5", "pydantic==2.12.5"]
-
-
-def test_requirements_aligned_to_keeps_versions_without_overrides() -> None:
-    requirements = Requirements.model_validate(
-        {"requirements": ["pydantic==2.12.5"]},
-    )
-
-    aligned = requirements.aligned_to({})
-
-    assert aligned.specs == ["pydantic==2.12.5"]

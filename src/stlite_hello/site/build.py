@@ -13,14 +13,11 @@ from .template_renderer import SiteTemplateRenderer
 
 
 def load_browser_requirements(
-    *,
     project_dependency_specifications: Sequence[str],
-    pyodide_bundle_versions: dict[str, SemanticVersion],
 ) -> Requirements:
-    project_requirements = RequirementsAdapter.validate_python(
+    return RequirementsAdapter.validate_python(
         {"requirements": project_dependency_specifications},
     )
-    return project_requirements.aligned_to(pyodide_bundle_versions)
 
 
 def prepare_site(
@@ -39,8 +36,7 @@ def prepare_site(
 
 def main() -> Path:
     browser_requirements = load_browser_requirements(
-        project_dependency_specifications=SITE_SETTINGS.project_dependency_specifications,
-        pyodide_bundle_versions=SITE_SETTINGS.pyodide_bundle_versions,
+        SITE_SETTINGS.project_dependency_specifications,
     )
     templates = SiteTemplateRenderer(jinja_environment=SITE_SETTINGS.jinja_environment)
     publisher = SiteFilePublisher(

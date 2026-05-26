@@ -4,22 +4,22 @@ default_language_version:
   python: python3.13
 
 .project-dependencies: &project-deps
-  - altair==6.1.0
+  - altair==6.0.0
   - jinja2==3.1.6
   - mypy==2.1.0
   - numpy==2.2.5
-  - pandas==3.0.3
+  - pandas==2.3.3
   - pandas-stubs==3.0.0.260204
   - pandera==0.31.1
-  - poethepoet==0.46.0
+  - poethepoet==0.37.0
   - prek==0.4.0
   - pydantic==2.12.5
   - pydantic-extra-types==2.11.1
   - pydantic-settings==2.14.1
   - pylint==4.0.5
   - pylint-pydantic==0.4.1
-  - pytest==9.0.3
-  - pytest-cov==7.1.0
+  - pytest==8.3.5
+  - pytest-cov==6.0.0
   - ruff==0.15.14
   - semver==3.0.4
   - streamlit==1.57.0

@@ -7,16 +7,16 @@ import pytest
 from stlite_hello.site import SITE_SETTINGS, load_browser_requirements, main
 
 
-def test_load_browser_requirements_aligns_to_pyodide_bundle() -> None:
+def test_load_browser_requirements_pins_each_project_dependency() -> None:
     requirements = load_browser_requirements(
-        project_dependency_specifications=SITE_SETTINGS.project_dependency_specifications,
-        pyodide_bundle_versions=SITE_SETTINGS.pyodide_bundle_versions,
+        SITE_SETTINGS.project_dependency_specifications,
     )
 
-    bundle_versions = SITE_SETTINGS.pyodide_bundle_versions
-
-    for name, version in bundle_versions.items():  # pylint: disable=no-member
-        assert f"{name}=={version}" in requirements.specs
+    for specification in SITE_SETTINGS.project_dependency_specifications:
+        name = specification.partition("==")[0]
+        if name == "streamlit":
+            continue
+        assert specification in requirements.specs
 
 
 def test_site_module_main_builds_default_output(tmp_path: Path) -> None:
@@ -32,7 +32,7 @@ def test_site_module_main_builds_default_output(tmp_path: Path) -> None:
     assert (site_dir / "index.html").is_file()
 
 
-def test_main_aligns_browser_requirements_to_pyodide_bundle(
+def test_main_writes_project_dependency_specifications_into_index(
     tmp_path: Path,
 ) -> None:
     original_cwd = Path.cwd()
@@ -43,10 +43,10 @@ def test_main_aligns_browser_requirements_to_pyodide_bundle(
     finally:
         os.chdir(original_cwd)
 
-    bundle_versions = SITE_SETTINGS.pyodide_bundle_versions
-
-    for name, version in bundle_versions.items():  # pylint: disable=no-member
-        assert f"{name}=={version}" in index_html
+    for specification in SITE_SETTINGS.project_dependency_specifications:
+        if specification.startswith("streamlit=="):
+            continue
+        assert specification in index_html
 
 
 @pytest.mark.usefixtures("_patch_site_settings")
