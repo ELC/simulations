@@ -49,8 +49,7 @@ class OrderBookSnapshot(BaseModel):
 
 
 def _split_roles(n_traders: int, buyer_share: float, rng: np.random.Generator) -> NDArray[np.bool_]:
-    is_buyer = rng.random(size=n_traders) < buyer_share
-    return is_buyer
+    return rng.random(size=n_traders) < buyer_share
 
 
 def _draw_values(*, n_traders: int, ceiling: float, rng: np.random.Generator) -> NDArray[np.float64]:

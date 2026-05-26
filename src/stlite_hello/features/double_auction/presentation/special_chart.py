@@ -10,7 +10,7 @@ import streamlit as st
 from pandera.typing import DataFrame
 from pydantic import BaseModel, ConfigDict
 
-from ..model import AdvancedParams, final_orderbook
+from stlite_hello.features.double_auction.model import AdvancedParams, final_orderbook
 
 _DEFAULT_HEIGHT = 320
 
