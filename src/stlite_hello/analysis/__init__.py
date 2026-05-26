@@ -17,6 +17,15 @@ from .charts import (
     build_metric_trajectories,
 )
 from .config import AggregationConfig
+from .export import (
+    SerializedBundle,
+    SerializedReport,
+    SimulationRunExport,
+    build_export,
+    deserialize_run,
+    export_filename,
+    serialize_run,
+)
 from .schemas import (
     DecileTransition,
     DistributionFit,
@@ -49,14 +58,21 @@ __all__ = [
     "ReplicateLong",
     "ReplicateResult",
     "RunBundle",
+    "SerializedBundle",
+    "SerializedReport",
     "SimulateOnce",
     "SimulationReport",
+    "SimulationRunExport",
     "TopPctSpell",
     "build_aic_ranking",
     "build_decile_transitions",
+    "build_export",
     "build_kde_with_fits",
     "build_lorenz",
     "build_metric_trajectories",
+    "deserialize_run",
+    "export_filename",
     "run_replicates",
+    "serialize_run",
     "summarize",
 ]

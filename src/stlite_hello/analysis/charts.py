@@ -76,9 +76,14 @@ def build_lorenz(lorenz: DataFrame[LorenzCurve], heading: ChartHeading) -> alt.T
     )
     curve = base.mark_area(opacity=0.4)
     line = base.mark_line()
-    equality_data = alt.Chart(lorenz).mark_line(strokeDash=[4, 2], color="gray").encode(
-        x="population_share:Q",
-        y=alt.Y("population_share:Q"),
+    equality_data = (
+        alt
+        .Chart(lorenz)
+        .mark_line(strokeDash=[4, 2], color="gray")
+        .encode(
+            x="population_share:Q",
+            y=alt.Y("population_share:Q"),
+        )
     )
     return alt.layer(curve, line, equality_data).properties(
         title=heading.title,
@@ -91,14 +96,24 @@ def build_kde_with_fits(
     fitted: DataFrame[FittedDensity],
     heading: KdeFitsHeading,
 ) -> alt.TopLevelMixin:
-    kde_chart = alt.Chart(kde).mark_area(opacity=0.35).encode(
-        x=alt.X("x:Q", title=heading.x_label),
-        y=alt.Y("density:Q", title=heading.density_label),
+    kde_chart = (
+        alt
+        .Chart(kde)
+        .mark_area(opacity=0.35)
+        .encode(
+            x=alt.X("x:Q", title=heading.x_label),
+            y=alt.Y("density:Q", title=heading.density_label),
+        )
     )
-    fit_chart = alt.Chart(fitted).mark_line().encode(
-        x=alt.X("x:Q"),
-        y=alt.Y("density:Q"),
-        color=alt.Color("name:N", title=heading.fit_legend_label),
+    fit_chart = (
+        alt
+        .Chart(fitted)
+        .mark_line()
+        .encode(
+            x=alt.X("x:Q"),
+            y=alt.Y("density:Q"),
+            color=alt.Color("name:N", title=heading.fit_legend_label),
+        )
     )
     return alt.layer(kde_chart, fit_chart).properties(
         title=heading.title,
@@ -108,7 +123,8 @@ def build_kde_with_fits(
 
 def build_aic_ranking(fits: DataFrame[DistributionFit], heading: ChartHeading) -> alt.TopLevelMixin:
     chart = (
-        alt.Chart(fits)
+        alt
+        .Chart(fits)
         .mark_bar()
         .encode(
             x=alt.X("delta_aic:Q", title=heading.x_label),
@@ -126,7 +142,8 @@ def build_decile_transitions(
     heading: DecileHeatmapHeading,
 ) -> alt.TopLevelMixin:
     chart = (
-        alt.Chart(transitions)
+        alt
+        .Chart(transitions)
         .mark_rect()
         .encode(
             x=alt.X("to_decile:O", title=heading.to_label),

@@ -12,6 +12,7 @@ from stlite_hello.analysis import (
     run_replicates,
     summarize,
 )
+from stlite_hello.analysis.aggregation import ParamsProtocol
 
 
 class _NoParams(BaseModel):
@@ -58,10 +59,14 @@ def aggregation_config(
     )
 
 
+_EXPONENTIAL_STEPS = 40
+_EXPONENTIAL_AGENTS = 25
+
+
 @pytest.fixture
 def exponential_simulate_once() -> SimulateOnce:
-    def _sim(_params: BaseModel, rng: np.random.Generator) -> ReplicateResult:
-        panel = rng.exponential(1.0, size=(40, 25)).astype(np.float64)
+    def _sim(_params: ParamsProtocol, rng: np.random.Generator) -> ReplicateResult:
+        panel = rng.exponential(1.0, size=(_EXPONENTIAL_STEPS, _EXPONENTIAL_AGENTS)).astype(np.float64)
         return ReplicateResult(focal_panel=panel, step_index=np.arange(panel.shape[0], dtype=np.int_))
 
     return _sim

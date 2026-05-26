@@ -14,9 +14,16 @@ from pandera.typing import DataFrame
 from .adapters import KaplanMeierEstimate, kaplan_meier_mean_lifetime
 from .schemas import DecileTransition, LorenzCurve, TopPctSpell
 
+_DEFAULT_TAIL_FRACTION = 0.1
+_DEFAULT_TOP_FRACTION = 0.01
+_DEFAULT_BOTTOM_DECILE = 1
+_DEFAULT_TOP_DECILE = 10
+_NUM_DECILES = 10
+_MINIMUM_SAMPLES_FOR_HILL = 2
+_MINIMUM_STEPS_FOR_MOBILITY = 2
+
 
 def gini(values: NDArray[np.float64]) -> float:
-    """Gini coefficient of a non-negative 1-D array."""
     if values.size == 0:
         return 0.0
     if np.any(values < 0):
@@ -25,32 +32,30 @@ def gini(values: NDArray[np.float64]) -> float:
     sorted_values = np.sort(values)
     n = sorted_values.size
     total = float(sorted_values.sum())
-    if total == 0.0:
+    if not total:
         return 0.0
     cumulative = np.cumsum(sorted_values, dtype=np.float64)
     return float((n + 1 - 2 * np.sum(cumulative) / total) / n)
 
 
 def top_share(values: NDArray[np.float64], *, fraction: float) -> float:
-    """Share of the total held by the top ``fraction`` of the population."""
     if values.size == 0:
         return 0.0
     if not 0.0 < fraction <= 1.0:
         msg = "fraction must be in (0, 1]"
         raise ValueError(msg)
     total = float(values.sum())
-    if total == 0.0:
+    if not total:
         return 0.0
     k = max(1, int(np.ceil(values.size * fraction)))
     top = np.partition(values, -k)[-k:]
     return float(top.sum() / total)
 
 
-def hill_alpha(values: NDArray[np.float64], *, tail_fraction: float = 0.1) -> float:
-    """Hill estimator of the Pareto tail index on the top ``tail_fraction``."""
-    if values.size < 2:
+def hill_alpha(values: NDArray[np.float64], *, tail_fraction: float = _DEFAULT_TAIL_FRACTION) -> float:
+    if values.size < _MINIMUM_SAMPLES_FOR_HILL:
         return 0.0
-    k = max(2, int(np.ceil(values.size * tail_fraction)))
+    k = max(_MINIMUM_SAMPLES_FOR_HILL, int(np.ceil(values.size * tail_fraction)))
     sorted_values = np.sort(values)
     threshold = sorted_values[-k]
     if threshold <= 0.0:
@@ -58,27 +63,25 @@ def hill_alpha(values: NDArray[np.float64], *, tail_fraction: float = 0.1) -> fl
     top = sorted_values[-k + 1 :]
     log_ratios = np.log(top / threshold)
     mean_log = float(np.mean(log_ratios))
-    if mean_log == 0.0:
+    if not mean_log:
         return 0.0
     return float(1.0 / mean_log)
 
 
 def coefficient_of_variation(values: NDArray[np.float64]) -> float:
-    """σ / μ — undefined when μ == 0 (returns 0.0)."""
     if values.size == 0:
         return 0.0
     mean = float(np.mean(values))
-    if mean == 0.0:
+    if not mean:
         return 0.0
     return float(np.std(values, ddof=0) / mean)
 
 
 def shannon_entropy(values: NDArray[np.float64]) -> float:
-    """Shannon entropy of the population's normalised shares (nats)."""
     if values.size == 0:
         return 0.0
     total = float(values.sum())
-    if total == 0.0:
+    if not total:
         return 0.0
     shares = values / total
     nonzero = shares[shares > 0.0]
@@ -91,17 +94,13 @@ def convergence_half_life(
     initial: float,
     final: float,
 ) -> float:
-    """Step at which ``trajectory`` first crosses half-way between initial and final."""
     if trajectory.size == 0:
         return 0.0
     delta = final - initial
-    if delta == 0.0:
+    if not delta:
         return 0.0
     target = initial + 0.5 * delta
-    if delta > 0:
-        crossings = np.where(trajectory >= target)[0]
-    else:
-        crossings = np.where(trajectory <= target)[0]
+    crossings = np.where(trajectory >= target)[0] if delta > 0 else np.where(trajectory <= target)[0]
     if crossings.size == 0:
         return float(trajectory.size - 1)
     return float(crossings[0])
@@ -117,43 +116,34 @@ def _top_set_indices(values: NDArray[np.float64], *, fraction: float) -> set[int
 def top_pct_turnover_per_step(
     panel: NDArray[np.float64],
     *,
-    fraction: float = 0.01,
+    fraction: float = _DEFAULT_TOP_FRACTION,
 ) -> NDArray[np.float64]:
-    """Per-step replacement rate of the top-``fraction`` set across the panel.
-
-    Returns an array of shape ``(n_steps - 1,)``; entry ``t`` is the share
-    of the top set at step ``t`` that is *not* in the top set at step
-    ``t + 1``.
-    """
-    if panel.shape[0] < 2:
+    if panel.shape[0] < _MINIMUM_STEPS_FOR_MOBILITY:
         return np.zeros(0, dtype=np.float64)
     rates = np.empty(panel.shape[0] - 1, dtype=np.float64)
     for step in range(panel.shape[0] - 1):
         previous = _top_set_indices(panel[step, :], fraction=fraction)
         following = _top_set_indices(panel[step + 1, :], fraction=fraction)
         denom = max(1, len(previous))
-        rates[step] = (len(previous - following)) / denom
+        rates[step] = len(previous - following) / denom
     return rates
 
 
-def top_pct_turnover_rate(panel: NDArray[np.float64], *, fraction: float = 0.01) -> float:
-    """Mean per-step turnover of the top-``fraction`` set."""
+def top_pct_turnover_rate(panel: NDArray[np.float64], *, fraction: float = _DEFAULT_TOP_FRACTION) -> float:
     rates = top_pct_turnover_per_step(panel, fraction=fraction)
     return float(rates.mean()) if rates.size > 0 else 0.0
 
 
-def top_pct_persistence_rate(panel: NDArray[np.float64], *, fraction: float = 0.01) -> float:
-    """``1 - top_pct_turnover_rate``."""
+def top_pct_persistence_rate(panel: NDArray[np.float64], *, fraction: float = _DEFAULT_TOP_FRACTION) -> float:
     return 1.0 - top_pct_turnover_rate(panel, fraction=fraction)
 
 
 def top_pct_spells(
     panel: NDArray[np.float64],
     *,
-    fraction: float = 0.01,
+    fraction: float = _DEFAULT_TOP_FRACTION,
     run_index: int = 0,
 ) -> DataFrame[TopPctSpell]:
-    """One row per contiguous spell of an agent inside the top-``fraction`` set."""
     rows: list[dict[str, int | bool]] = []
     n_steps, n_agents = panel.shape
     for agent in range(n_agents):
@@ -194,7 +184,6 @@ def top_pct_spells(
 
 
 def mean_tenure_from_spells(spells: DataFrame[TopPctSpell]) -> KaplanMeierEstimate:
-    """Restricted mean tenure across spells, with right-censoring."""
     if spells.shape[0] == 0:
         return KaplanMeierEstimate(
             mean_lifetime=0.0,
@@ -209,22 +198,20 @@ def mean_tenure_from_spells(spells: DataFrame[TopPctSpell]) -> KaplanMeierEstima
 
 
 def _agent_decile(panel: NDArray[np.float64]) -> NDArray[np.int_]:
-    """Decile (1..10) of each agent at each step."""
     decile = np.empty(panel.shape, dtype=np.int_)
     for step in range(panel.shape[0]):
         ranks = np.argsort(np.argsort(panel[step, :]))
-        decile[step, :] = np.minimum(10, (ranks * 10 // panel.shape[1]) + 1)
+        decile[step, :] = np.minimum(_NUM_DECILES, (ranks * _NUM_DECILES // panel.shape[1]) + 1)
     return decile
 
 
 def bottom_to_top_rise_count(
     panel: NDArray[np.float64],
     *,
-    bottom_decile: int = 1,
-    top_decile: int = 10,
+    bottom_decile: int = _DEFAULT_BOTTOM_DECILE,
+    top_decile: int = _DEFAULT_TOP_DECILE,
 ) -> float:
-    """Fraction of agents that move from ``bottom_decile`` to ``top_decile`` later in time."""
-    if panel.shape[0] < 2 or panel.shape[1] == 0:
+    if panel.shape[0] < _MINIMUM_STEPS_FOR_MOBILITY or panel.shape[1] == 0:
         return 0.0
     decile = _agent_decile(panel)
     risers = 0
@@ -243,11 +230,10 @@ def bottom_to_top_rise_count(
 def median_time_to_rise(
     panel: NDArray[np.float64],
     *,
-    bottom_decile: int = 1,
-    top_decile: int = 10,
+    bottom_decile: int = _DEFAULT_BOTTOM_DECILE,
+    top_decile: int = _DEFAULT_TOP_DECILE,
 ) -> float:
-    """Median number of steps from first bottom-decile to first top-decile observation."""
-    if panel.shape[0] < 2 or panel.shape[1] == 0:
+    if panel.shape[0] < _MINIMUM_STEPS_FOR_MOBILITY or panel.shape[1] == 0:
         return 0.0
     decile = _agent_decile(panel)
     delays: list[int] = []
@@ -266,7 +252,6 @@ def median_time_to_rise(
 
 
 def lorenz_curve(values: NDArray[np.float64]) -> DataFrame[LorenzCurve]:
-    """Lorenz curve points (population share, value share) including (0, 0)."""
     if values.size == 0:
         frame = pd.DataFrame({"population_share": [0.0], "value_share": [0.0]})
         return DataFrame[LorenzCurve](frame)
@@ -274,7 +259,7 @@ def lorenz_curve(values: NDArray[np.float64]) -> DataFrame[LorenzCurve]:
     total = float(sorted_values.sum())
     n = sorted_values.size
     population_share = np.concatenate(([0.0], np.arange(1, n + 1, dtype=np.float64) / n))
-    if total == 0.0:
+    if not total:
         value_share = np.zeros_like(population_share)
     else:
         cumulative = np.concatenate(([0.0], np.cumsum(sorted_values, dtype=np.float64) / total))
@@ -284,29 +269,31 @@ def lorenz_curve(values: NDArray[np.float64]) -> DataFrame[LorenzCurve]:
     return DataFrame[LorenzCurve](frame)
 
 
+def _empty_transition_frame() -> pd.DataFrame:
+    return pd.DataFrame(
+        {
+            "from_decile": np.repeat(np.arange(1, _NUM_DECILES + 1, dtype=np.int64), _NUM_DECILES),
+            "to_decile": np.tile(np.arange(1, _NUM_DECILES + 1, dtype=np.int64), _NUM_DECILES),
+            "probability": np.zeros(_NUM_DECILES * _NUM_DECILES, dtype=np.float64),
+        },
+    )
+
+
 def decile_transition_matrix(panel: NDArray[np.float64]) -> DataFrame[DecileTransition]:
-    """Long-form 10×10 transition matrix from the first to the last sampled step."""
-    if panel.shape[0] < 2 or panel.shape[1] == 0:
-        empty = pd.DataFrame(
-            {
-                "from_decile": np.repeat(np.arange(1, 11, dtype=np.int64), 10),
-                "to_decile": np.tile(np.arange(1, 11, dtype=np.int64), 10),
-                "probability": np.zeros(100, dtype=np.float64),
-            },
-        )
-        return DataFrame[DecileTransition](empty)
+    if panel.shape[0] < _MINIMUM_STEPS_FOR_MOBILITY or panel.shape[1] == 0:
+        return DataFrame[DecileTransition](_empty_transition_frame())
     decile = _agent_decile(panel)
     initial = decile[0, :]
     final = decile[-1, :]
-    counts = np.zeros((10, 10), dtype=np.float64)
+    counts = np.zeros((_NUM_DECILES, _NUM_DECILES), dtype=np.float64)
     for start, end in zip(initial, final, strict=True):
         counts[start - 1, end - 1] += 1.0
     row_sums = counts.sum(axis=1, keepdims=True)
     safe_rows = np.where(row_sums > 0, row_sums, 1.0)
     probabilities = counts / safe_rows
     from_grid, to_grid = np.meshgrid(
-        np.arange(1, 11, dtype=np.int64),
-        np.arange(1, 11, dtype=np.int64),
+        np.arange(1, _NUM_DECILES + 1, dtype=np.int64),
+        np.arange(1, _NUM_DECILES + 1, dtype=np.int64),
         indexing="ij",
     )
     frame = pd.DataFrame(

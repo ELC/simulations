@@ -12,6 +12,9 @@ from stlite_hello.analysis import (
     build_metric_trajectories,
 )
 
+_LORENZ_LAYERS = 3
+_KDE_LAYERS = 2
+
 
 @pytest.fixture
 def trajectories_heading() -> ChartHeading:
@@ -71,7 +74,7 @@ def test_lorenz_chart_includes_equality_line(
 
     spec = chart.to_dict()
     assert spec["title"] == lorenz_heading.title
-    assert len(spec["layer"]) == 3
+    assert len(spec["layer"]) == _LORENZ_LAYERS
 
 
 def test_kde_chart_overlays_kde_and_fits(
@@ -82,7 +85,7 @@ def test_kde_chart_overlays_kde_and_fits(
 
     spec = chart.to_dict()
     assert spec["title"] == kde_heading.title
-    assert len(spec["layer"]) == 2
+    assert len(spec["layer"]) == _KDE_LAYERS
 
 
 def test_aic_chart_uses_delta_aic_on_x(

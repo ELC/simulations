@@ -1,0 +1,215 @@
+# serializer version: 1
+# name: test_export_schema_is_snapshotted
+  dict({
+    '$defs': dict({
+      'AggregationConfig': dict({
+        'description': '''
+          Knobs shared across every simulation (runs, seed, bootstrap, snapshots).
+          
+          Each feature subclasses this with its own ``params`` payload and a
+          feature-specific default seed (distinct from every other feature).
+        ''',
+        'properties': dict({
+          'bootstrap_method': dict({
+            'default': 'BCa',
+            'enum': list([
+              'BCa',
+              'percentile',
+              'basic',
+            ]),
+            'title': 'Bootstrap Method',
+            'type': 'string',
+          }),
+          'bootstrap_resamples': dict({
+            'default': 2000,
+            'maximum': 20000,
+            'minimum': 200,
+            'title': 'Bootstrap Resamples',
+            'type': 'integer',
+          }),
+          'confidence_level': dict({
+            'default': 0.95,
+            'exclusiveMaximum': 1.0,
+            'exclusiveMinimum': 0.0,
+            'title': 'Confidence Level',
+            'type': 'number',
+          }),
+          'runs': dict({
+            'default': 30,
+            'maximum': 500,
+            'minimum': 1,
+            'title': 'Runs',
+            'type': 'integer',
+          }),
+          'seed': dict({
+            'title': 'Seed',
+            'type': 'integer',
+          }),
+          'trajectory_step_samples': dict({
+            'default': 50,
+            'maximum': 500,
+            'minimum': 2,
+            'title': 'Trajectory Step Samples',
+            'type': 'integer',
+          }),
+        }),
+        'required': list([
+          'seed',
+        ]),
+        'title': 'AggregationConfig',
+        'type': 'object',
+      }),
+      'SerializedBundle': dict({
+        'description': '``RunBundle`` projected onto records for JSON round-trip.',
+        'properties': dict({
+          'final_population': dict({
+            'items': dict({
+              'additionalProperties': True,
+              'type': 'object',
+            }),
+            'title': 'Final Population',
+            'type': 'array',
+          }),
+          'focal_panel': dict({
+            'items': dict({
+              'additionalProperties': True,
+              'type': 'object',
+            }),
+            'title': 'Focal Panel',
+            'type': 'array',
+          }),
+        }),
+        'required': list([
+          'final_population',
+          'focal_panel',
+        ]),
+        'title': 'SerializedBundle',
+        'type': 'object',
+      }),
+      'SerializedReport': dict({
+        'description': '``SimulationReport`` projected onto records for JSON round-trip.',
+        'properties': dict({
+          'decile_transitions': dict({
+            'items': dict({
+              'additionalProperties': True,
+              'type': 'object',
+            }),
+            'title': 'Decile Transitions',
+            'type': 'array',
+          }),
+          'fits': dict({
+            'items': dict({
+              'additionalProperties': True,
+              'type': 'object',
+            }),
+            'title': 'Fits',
+            'type': 'array',
+          }),
+          'fitted_densities': dict({
+            'items': dict({
+              'additionalProperties': True,
+              'type': 'object',
+            }),
+            'title': 'Fitted Densities',
+            'type': 'array',
+          }),
+          'kde': dict({
+            'items': dict({
+              'additionalProperties': True,
+              'type': 'object',
+            }),
+            'title': 'Kde',
+            'type': 'array',
+          }),
+          'lorenz': dict({
+            'items': dict({
+              'additionalProperties': True,
+              'type': 'object',
+            }),
+            'title': 'Lorenz',
+            'type': 'array',
+          }),
+          'metrics_ci': dict({
+            'items': dict({
+              'additionalProperties': True,
+              'type': 'object',
+            }),
+            'title': 'Metrics Ci',
+            'type': 'array',
+          }),
+          'metrics_ci_over_time': dict({
+            'items': dict({
+              'additionalProperties': True,
+              'type': 'object',
+            }),
+            'title': 'Metrics Ci Over Time',
+            'type': 'array',
+          }),
+          'top_pct_spells': dict({
+            'items': dict({
+              'additionalProperties': True,
+              'type': 'object',
+            }),
+            'title': 'Top Pct Spells',
+            'type': 'array',
+          }),
+        }),
+        'required': list([
+          'metrics_ci',
+          'metrics_ci_over_time',
+          'lorenz',
+          'kde',
+          'fits',
+          'fitted_densities',
+          'decile_transitions',
+          'top_pct_spells',
+        ]),
+        'title': 'SerializedReport',
+        'type': 'object',
+      }),
+    }),
+    'description': 'The complete payload a user downloads from the page.',
+    'properties': dict({
+      'bundle': dict({
+        '$ref': '#/$defs/SerializedBundle',
+      }),
+      'config': dict({
+        '$ref': '#/$defs/AggregationConfig',
+      }),
+      'feature': dict({
+        'minLength': 1,
+        'title': 'Feature',
+        'type': 'string',
+      }),
+      'generated_at': dict({
+        'format': 'date-time',
+        'title': 'Generated At',
+        'type': 'string',
+      }),
+      'params': dict({
+        'additionalProperties': True,
+        'title': 'Params',
+        'type': 'object',
+      }),
+      'report': dict({
+        '$ref': '#/$defs/SerializedReport',
+      }),
+      'schema_version': dict({
+        'const': '1',
+        'default': '1',
+        'title': 'Schema Version',
+        'type': 'string',
+      }),
+    }),
+    'required': list([
+      'feature',
+      'generated_at',
+      'config',
+      'params',
+      'bundle',
+      'report',
+    ]),
+    'title': 'SimulationRunExport',
+    'type': 'object',
+  })
+# ---

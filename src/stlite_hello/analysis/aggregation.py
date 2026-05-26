@@ -18,11 +18,13 @@ from pydantic import BaseModel, ConfigDict
 from .config import AggregationConfig
 from .schemas import FinalPopulation, FocalPanel
 
+_EXPECTED_PANEL_DIMS = 2
+
 
 class ReplicateResult(BaseModel):
     """Output of one replicate.
 
-    ``focal_panel`` has shape ``(n_steps, n_agents)`` — agents that drop out
+    ``focal_panel`` has shape ``(n_steps, n_agents)`` -- agents that drop out
     in the middle of the run still get a value in every step (typically
     ``0`` once they exit), so the matrix is dense and reasoning over time
     is straightforward.
@@ -38,14 +40,8 @@ class ParamsProtocol(Protocol):
     """Marker for simulation parameter models (any frozen Pydantic BaseModel)."""
 
 
-class SimulateOnce(Protocol):
-    """A simulation: takes its params and an RNG, returns a ``ReplicateResult``."""
-
-    def __call__(
-        self,
-        params: ParamsProtocol,
-        rng: np.random.Generator,
-    ) -> ReplicateResult: ...
+SimulateOnce = Callable[[ParamsProtocol, np.random.Generator], ReplicateResult]
+"""A simulation callable: takes params and an RNG, returns a ``ReplicateResult``."""
 
 
 class RunBundle(BaseModel):
@@ -102,7 +98,14 @@ def run_replicates(
     params: ParamsProtocol,
     config: AggregationConfig,
 ) -> RunBundle:
-    """Run ``config.runs`` independent replicates with seeded RNGs."""
+    """Run ``config.runs`` independent replicates with seeded RNGs.
+
+    Returns
+    -------
+    RunBundle
+        Bundle carrying the final population and the focal-quantity panel
+        across every replicate, validated through Pandera schemas.
+    """
     parent = np.random.SeedSequence(config.seed)
     child_seeds = parent.spawn(config.runs)
     panels: list[NDArray[np.float64]] = []
@@ -110,7 +113,7 @@ def run_replicates(
     for seed_seq in child_seeds:
         rng = np.random.default_rng(seed_seq)
         result = simulate_once(params, rng)
-        if result.focal_panel.ndim != 2:
+        if result.focal_panel.ndim != _EXPECTED_PANEL_DIMS:
             msg = "ReplicateResult.focal_panel must be 2-D (steps, agents)"
             raise ValueError(msg)
         if result.focal_panel.shape[0] != result.step_index.size:
