@@ -44,6 +44,11 @@ repos:
 
       - id: ruff-format
 
+  # - repo: https://github.com/JuanJFarina/pymetrica
+  #   rev: v1.5.6
+  #   hooks:
+  #     - id: pymetrica
+
   - repo: https://github.com/pre-commit/mirrors-mypy
     rev: v2.1.0
     hooks:

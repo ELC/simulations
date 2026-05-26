@@ -37,7 +37,7 @@ package = true
 
 [tool.poe.tasks]
 test = "pytest"
-check = "prek run --all-files"
+check = "prek run --all-files --verbose"
 build-site = "python -m stlite_hello.site"
 serve-site = { sequence = [
     "build-site",
@@ -196,3 +196,11 @@ disable = [
     "R0917",  # too-many-positional-arguments (DI constructors)
     "W0621",  # pytest fixture parameter names shadow outer fixtures
 ]
+
+
+#########################
+# Pymetrica
+#########################
+
+[tool.pymetrica]
+exclude = []
